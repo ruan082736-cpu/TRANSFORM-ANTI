@@ -436,27 +436,76 @@
             position: relative;
             overflow: hidden;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
             min-height: 320px;
             background: var(--article-bg);
             transition: background 0.3s ease, border-color 0.3s ease;
+            cursor: text;
+        }
+
+        .article-area:focus-within {
+            border-color: var(--navy);
+            box-shadow: 0 0 0 3px rgba(26, 43, 74, 0.08);
+        }
+
+        /* 입력 에디터 */
+        .article-editor {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            padding: 22px 24px;
+            outline: none;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.9;
+            color: var(--text-primary);
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            min-height: 320px;
+        }
+
+        /* placeholder: 내용 없을 때만 보임 */
+        .article-editor:empty::before {
+            content: attr(data-placeholder);
+            color: var(--text-muted);
+            pointer-events: none;
+            display: block;
         }
 
         .article-placeholder {
-            position: absolute;
-            top: 28px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 16px;
-            color: var(--text-muted);
-            pointer-events: none;
+            display: none;
+            /* contenteditable 방식으로 대체 */
         }
 
         .article-watermark {
             pointer-events: none;
             opacity: 0.07;
+            position: absolute;
+            bottom: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            z-index: 1;
+            transition: opacity 0.3s;
+        }
+
+        .article-watermark.hidden {
+            opacity: 0;
+        }
+
+        /* 글자 수 카운터 */
+        .article-counter {
+            position: absolute;
+            bottom: 10px;
+            right: 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+            z-index: 3;
+            pointer-events: none;
+            user-select: none;
         }
 
         .article-watermark svg {
@@ -1315,15 +1364,20 @@
             </h1>
             <p class="center-subtitle">기사 내용을 입력하거나 우측의 실시간 뉴스를 활용해 아이디어를 얻어보세요.</p>
 
-            <div class="article-area">
-                <p class="article-placeholder">여기에 기사 내용을 붙여넣으세요...</p>
-                <div class="article-watermark">
+            <div class="article-area" id="articleArea">
+                <!-- 직접 입력 에디터 (contenteditable) -->
+                <div class="article-editor" id="articleEditor" contenteditable="true" spellcheck="false"
+                    data-placeholder="여기에 기사 내용을 직접 입력하거나 붙여넣으세요..."></div>
+                <!-- 워터마크: 내용 없을 때만 표시 -->
+                <div class="article-watermark" id="articleWatermark">
                     <svg viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
                         <path
                             d="M20 12C20 12 15.5 4 10 4C5.58 4 2 7.58 2 12C2 16.42 5.58 20 10 20C15.5 20 20 12 20 12ZM20 12C20 12 24.5 20 30 20C34.42 20 38 16.42 38 12C38 7.58 34.42 4 30 4C24.5 4 20 12 20 12Z"
                             stroke="#1a2b4a" stroke-width="2" fill="none" stroke-linecap="round" />
                     </svg>
                 </div>
+                <!-- 글자 수 카운터 -->
+                <span class="article-counter" id="articleCounter">0자</span>
             </div>
 
             <div class="center-actions">
@@ -1625,37 +1679,50 @@
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
         // ════════════════════════════════════════════
-        //  에디터에 적용
+        //  에디터 헬퍼
+        // ════════════════════════════════════════════
+        const articleEditor = document.getElementById('articleEditor');
+        const articleWatermark = document.getElementById('articleWatermark');
+        const articleCounter = document.getElementById('articleCounter');
+
+        function updateEditorUI() {
+            const len = (articleEditor.innerText || '').trim().length;
+            articleCounter.textContent = len > 0 ? len.toLocaleString() + '자' : '0자';
+            articleWatermark.classList.toggle('hidden', len > 0);
+        }
+
+        articleEditor.addEventListener('input', updateEditorUI);
+        document.getElementById('articleArea').addEventListener('click', () => articleEditor.focus());
+
+        // 붙여넣기 시 서식 제거
+        articleEditor.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const plain = (e.clipboardData || window.clipboardData).getData('text/plain');
+            document.execCommand('insertText', false, plain);
+        });
+
+        updateEditorUI();
+
+        // ════════════════════════════════════════════
+        //  에디터에 적용 (뉴스 기사 → 에디터)
         // ════════════════════════════════════════════
         function applyToEditor(item) {
             const title = stripHtml(item.title);
             const desc = stripHtml(item.description);
             const date = formatDate(item.pubDate);
             const link = item.link || item.originallink;
-            const text = `[${title}]\n\n${desc}\n\n출처: ${link}\n일자: ${date}`;
+            const text = '[' + title + ']\n\n' + desc + '\n\n출처: ' + link + '\n일자: ' + date;
 
-            // article-area 내부에 텍스트 표시
-            const area = document.querySelector('.article-area');
-            const placeholder = document.querySelector('.article-placeholder');
-            const watermark = document.querySelector('.article-watermark');
-
-            if (placeholder) placeholder.style.display = 'none';
-            if (watermark) watermark.style.display = 'none';
-
-            let ta = document.getElementById('editorContent');
-            if (!ta) {
-                ta = document.createElement('textarea');
-                ta.id = 'editorContent';
-                ta.style.cssText = `
-                width:100%; height:100%; border:none; background:transparent;
-                font-family:inherit; font-size:14px; color:var(--text-primary);
-                resize:none; outline:none; padding:20px; line-height:1.8;
-                box-sizing:border-box;
-            `;
-                area.appendChild(ta);
-            }
-            ta.value = text;
-            ta.focus();
+            articleEditor.innerText = text;
+            articleEditor.focus();
+            // 커서를 맨 끝으로 이동
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(articleEditor);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            updateEditorUI();
         }
 
         // ════════════════════════════════════════════
