@@ -1285,11 +1285,166 @@
             transition: opacity 0.18s;
         }
 
-        .reprocess-apply:hover {
-            opacity: 0.88;
+
+        /* ─── 제작 로딩 (스피너) ─── */
+        .creation-loading {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 17, 23, 0.92);
+            z-index: 3000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
         }
 
-        /* ─── AUTH 모달 ─── */
+        .creation-loading.open {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--navy);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 24px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .loading-sub {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* ─── 완료 모달 (결과물) ─── */
+        .result-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 3001;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(8px);
+        }
+
+        .result-overlay.open {
+            display: flex;
+        }
+
+        .result-box {
+            background: var(--card-bg);
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 480px;
+            overflow: hidden;
+            animation: modalIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .result-img-area {
+            width: 100%;
+            aspect-ratio: 1/1;
+            /* 일단 1:1 디폴트 */
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .result-dummy-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+        }
+
+        .result-badge {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+        }
+
+        .result-actions {
+            padding: 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-download {
+            flex: 1;
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-share {
+            width: 50px;
+            background: var(--article-bg);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .btn-close-result {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
 
         .auth-overlay {
             display: none;
@@ -2611,11 +2766,13 @@
             }
         });
 
+
+
         // ════════════════════════════════════════════
-        //  콘텐츠 제작하기 버튼
+        //  콘텐츠 제작하기 버튼 (시뮬레이션)
         // ════════════════════════════════════════════
         document.getElementById('btnCreate').addEventListener('click', () => {
-            const content = (articleEditor.innerText || '').trim();
+            const content = (document.getElementById('articleEditor').innerText || '').trim();
             const activeType = document.querySelector('.type-btn.active');
             const activeStyle = document.querySelector('.style-btn.active');
             const activeRatio = document.querySelector('.ratio-btn.active');
@@ -2625,11 +2782,45 @@
                 return;
             }
 
-            const type = activeType?.textContent || '카드뉴스';
-            const style = activeStyle?.textContent || 'REAL';
-            const ratio = activeRatio?.textContent || '1:1';
+            const type = activeType?.textContent.trim() || '카드뉴스';
+            const style = activeStyle?.textContent.trim() || 'REAL';
+            const ratio = activeRatio?.textContent.trim() || '1:1';
 
-            showToast(`🎨 ${type} · ${style} · ${ratio} 제작을 시작합니다!`, 'info', 3000);
+            // 로딩 시작
+            const loading = document.getElementById('creationLoading');
+            loading.classList.add('open');
+
+            // 3초 후 완료 처리
+            setTimeout(() => {
+
+                document.getElementById('resultBadge').textContent = `${type} · ${style} · ${ratio}`;
+                document.getElementById('resultOverlay').classList.add('open');
+                showToast('콘텐츠 제작 완료! ✨', 'success');
+
+            }, 3000);
+        });
+
+        // 결과 창 닫기
+        document.getElementById('btnCloseResult').addEventListener('click', () => {
+            document.getElementById('resultOverlay').classList.remove('open');
+        });
+        document.getElementById('resultOverlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('resultOverlay'))
+                document.getElementById('resultOverlay').classList.remove('open');
+        });
+
+        // 다운로드 (더미)
+        document.getElementById('btnDownload').addEventListener('click', () => {
+            showToast('이미지를 다운로드합니다...', 'success');
+            // 실제 다운로드 로직은 canvas나 서버 응답 blob 필요
+        });
+
+        // 공유 (더미)
+        document.getElementById('btnShare').addEventListener('click', () => {
+            // 클립보드 복사 시늉
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showToast('링크가 복사되었습니다! 🔗', 'info');
+            });
         });
 
         // ════════════════════════════════════════════
