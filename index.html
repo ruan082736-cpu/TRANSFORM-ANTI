@@ -1726,6 +1726,19 @@
         </div>
     </header>
 
+    <style>
+        .btn-reprocess-highlight {
+            background: #eef2ff;
+            color: var(--navy);
+            border: 1.5px solid var(--navy);
+            font-weight: 700;
+        }
+
+        .btn-reprocess-highlight:hover {
+            background: #dbe4ff;
+        }
+    </style>
+
     <!-- ─── MAIN ─────────────────────────────────────── -->
     <main>
 
@@ -1810,7 +1823,7 @@
                 <button class="ratio-btn">4:5</button>
             </div>
 
-            <button class="btn-create" id="btnCreate">콘텐츠 제작하기</button>
+            <button class="btn-create" id="btnCreate">🎨 이미지 콘텐츠 제작</button>
             <button class="btn-reset" id="btnReset">초기화</button>
         </aside>
 
@@ -1838,7 +1851,7 @@
             </div>
 
             <div class="center-actions">
-                <button class="btn-secondary" id="btnReprocess">기사 재가공</button>
+                <button class="btn-secondary btn-reprocess-highlight" id="btnReprocess">✏️ 기사텍스트 재가공 (요약/변환)</button>
                 <button class="btn-save" id="btnSave">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -2705,6 +2718,7 @@
                 showToast('재가공할 내용을 먼저 입력하세요', 'warning');
                 return;
             }
+            showToast('텍스트 재가공 옵션을 선택하세요', 'info', 1500);
             document.getElementById('reprocessOverlay').classList.add('open');
         });
 
@@ -2786,18 +2800,19 @@
             const style = activeStyle?.textContent.trim() || 'REAL';
             const ratio = activeRatio?.textContent.trim() || '1:1';
 
+            if (!confirm(`'${type}' 스타일로 이미지 콘텐츠를 제작하시겠습니까?`)) return;
+
             // 로딩 시작
             const loading = document.getElementById('creationLoading');
             loading.classList.add('open');
 
-            // 3초 후 완료 처리
+            // 2.5초 후 완료 처리
             setTimeout(() => {
-
                 document.getElementById('resultBadge').textContent = `${type} · ${style} · ${ratio}`;
                 document.getElementById('resultOverlay').classList.add('open');
                 showToast('콘텐츠 제작 완료! ✨', 'success');
-
-            }, 3000);
+                loading.classList.remove('open');
+            }, 2500);
         });
 
         // 결과 창 닫기
