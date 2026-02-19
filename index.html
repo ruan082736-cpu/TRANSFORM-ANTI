@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet" />
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         *,
         *::before,
@@ -704,6 +706,7 @@
             margin-bottom: 8px;
             display: -webkit-box;
             -webkit-line-clamp: 3;
+            line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -935,6 +938,234 @@
         .panel-title {
             transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
+
+        /* ─── AUTH 모달 ─── */
+        .auth-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(6px);
+        }
+
+        .auth-overlay.open {
+            display: flex;
+        }
+
+        .auth-box {
+            background: var(--card-bg);
+            border-radius: 24px;
+            width: 92%;
+            max-width: 420px;
+            padding: 40px 36px 36px;
+            position: relative;
+            border: 1px solid var(--border);
+            animation: modalIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+
+        .auth-logo-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--navy);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-logo-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .auth-logo-text {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--navy);
+        }
+
+        .auth-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .auth-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .auth-field {
+            margin-bottom: 16px;
+        }
+
+        .auth-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 7px;
+            display: block;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            background: var(--article-bg);
+            font-size: 14px;
+            color: var(--text-primary);
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .auth-input:focus {
+            border-color: var(--navy);
+        }
+
+        .auth-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 8px;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .auth-btn:hover {
+            opacity: 0.88;
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .auth-switch a {
+            color: #1e6bb8;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-msg {
+            margin-top: 14px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .auth-msg.error {
+            background: rgba(220, 38, 38, 0.08);
+            color: #dc2626;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            display: block;
+        }
+
+        .auth-msg.success {
+            background: rgba(22, 163, 74, 0.08);
+            color: #16a34a;
+            border: 1px solid rgba(22, 163, 74, 0.2);
+            display: block;
+        }
+
+        .auth-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 22px 0;
+        }
+
+        /* 로그인 후 헤더 유저 정보 */
+        .header-user {
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-user.visible {
+            display: flex;
+        }
+
+        .header-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--navy);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .header-username {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .btn-logout {
+            padding: 7px 16px;
+            border: 1.5px solid var(--border);
+            background: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.18s;
+        }
+
+        .btn-logout:hover {
+            border-color: #dc2626;
+            color: #dc2626;
+        }
     </style>
 </head>
 
@@ -975,8 +1206,17 @@
                     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
                 </svg>
             </button>
-            <button class="btn-text">로그인</button>
-            <button class="btn-primary">회원가입</button>
+            <!-- 비로그인 상태 -->
+            <div id="authBtns">
+                <button class="btn-text" id="btnLogin">로그인</button>
+                <button class="btn-primary" id="btnSignup">회원가입</button>
+            </div>
+            <!-- 로그인 상태 -->
+            <div class="header-user" id="headerUser">
+                <div class="header-avatar" id="headerAvatar">U</div>
+                <span class="header-username" id="headerUsername">사용자</span>
+                <button class="btn-logout" id="btnLogout">로그아웃</button>
+            </div>
         </div>
     </header>
 
@@ -1437,6 +1677,284 @@
         // ════════════════════════════════════════════
         loadTrending();
 
+    </script>
+
+    <!-- ════════════════════════════════════════════
+         로그인 모달
+    ════════════════════════════════════════════ -->
+    <div class="auth-overlay" id="loginOverlay">
+        <div class="auth-box">
+            <button class="modal-close" id="loginClose">×</button>
+
+            <!-- 로고 -->
+            <div class="auth-logo">
+                <div class="auth-logo-icon">
+                    <svg viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M20 12C20 12 15.5 4 10 4C5.58 4 2 7.58 2 12C2 16.42 5.58 20 10 20C15.5 20 20 12 20 12ZM20 12C20 12 24.5 20 30 20C34.42 20 38 16.42 38 12C38 7.58 34.42 4 30 4C24.5 4 20 12 20 12Z"
+                            stroke="white" stroke-width="3" fill="none" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <span class="auth-logo-text">TRANSFORM</span>
+            </div>
+
+            <h2 class="auth-title">다시 만나서 반가워요 👋</h2>
+            <p class="auth-subtitle">계속하려면 로그인하세요</p>
+
+            <div class="auth-field">
+                <label class="auth-label">이메일 (아이디)</label>
+                <input class="auth-input" type="email" id="loginEmail" placeholder="example@email.com"
+                    autocomplete="email" />
+            </div>
+            <div class="auth-field">
+                <label class="auth-label">비밀번호</label>
+                <input class="auth-input" type="password" id="loginPassword" placeholder="비밀번호를 입력하세요"
+                    autocomplete="current-password" />
+            </div>
+
+            <button class="auth-btn" id="loginSubmit">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+                로그인
+            </button>
+
+            <div class="auth-msg" id="loginMsg"></div>
+
+            <div class="auth-divider"></div>
+            <div class="auth-switch">
+                아직 계정이 없으신가요? <a id="goSignup">회원가입</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════
+         회원가입 모달
+    ════════════════════════════════════════════ -->
+    <div class="auth-overlay" id="signupOverlay">
+        <div class="auth-box">
+            <button class="modal-close" id="signupClose">×</button>
+
+            <!-- 로고 -->
+            <div class="auth-logo">
+                <div class="auth-logo-icon">
+                    <svg viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M20 12C20 12 15.5 4 10 4C5.58 4 2 7.58 2 12C2 16.42 5.58 20 10 20C15.5 20 20 12 20 12ZM20 12C20 12 24.5 20 30 20C34.42 20 38 16.42 38 12C38 7.58 34.42 4 30 4C24.5 4 20 12 20 12Z"
+                            stroke="white" stroke-width="3" fill="none" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <span class="auth-logo-text">TRANSFORM</span>
+            </div>
+
+            <h2 class="auth-title">TRANSFORM 시작하기 🚀</h2>
+            <p class="auth-subtitle">3가지 정보만 입력하면 바로 시작할 수 있어요</p>
+
+            <div class="auth-field">
+                <label class="auth-label">사용자 이름</label>
+                <input class="auth-input" type="text" id="signupName" placeholder="홍길동" autocomplete="name" />
+            </div>
+            <div class="auth-field">
+                <label class="auth-label">이메일 (아이디)</label>
+                <input class="auth-input" type="email" id="signupEmail" placeholder="example@email.com"
+                    autocomplete="email" />
+            </div>
+            <div class="auth-field">
+                <label class="auth-label">비밀번호</label>
+                <input class="auth-input" type="password" id="signupPassword" placeholder="6자 이상 입력하세요"
+                    autocomplete="new-password" />
+            </div>
+
+            <button class="auth-btn" id="signupSubmit">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <line x1="19" y1="8" x2="19" y2="14" />
+                    <line x1="22" y1="11" x2="16" y2="11" />
+                </svg>
+                회원가입
+            </button>
+
+            <div class="auth-msg" id="signupMsg"></div>
+
+            <div class="auth-divider"></div>
+            <div class="auth-switch">
+                이미 계정이 있으신가요? <a id="goLogin">로그인</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════
+         Supabase 인증 스크립트
+    ════════════════════════════════════════════ -->
+    <script>
+        // ── Supabase 클라이언트 초기화 ─────────────────────────
+        const SUPABASE_URL = 'https://onpzllaanzfsekdojqla.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_W2qyoLuscV5adCxhuMPjjw_EwwfRKyl';
+        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ── 모달 요소 ──────────────────────────────────────────
+        const loginOverlay = document.getElementById('loginOverlay');
+        const signupOverlay = document.getElementById('signupOverlay');
+
+        function openLogin() { loginOverlay.classList.add('open'); clearMsg('login'); }
+        function closeLogin() { loginOverlay.classList.remove('open'); }
+        function openSignup() { signupOverlay.classList.add('open'); clearMsg('signup'); }
+        function closeSignup() { signupOverlay.classList.remove('open'); }
+
+        // 버튼 이벤트
+        document.getElementById('btnLogin').addEventListener('click', openLogin);
+        document.getElementById('btnSignup').addEventListener('click', openSignup);
+        document.getElementById('loginClose').addEventListener('click', closeLogin);
+        document.getElementById('signupClose').addEventListener('click', closeSignup);
+        document.getElementById('goSignup').addEventListener('click', () => { closeLogin(); openSignup(); });
+        document.getElementById('goLogin').addEventListener('click', () => { closeSignup(); openLogin(); });
+
+        // 배경 클릭 닫기
+        loginOverlay.addEventListener('click', e => { if (e.target === loginOverlay) closeLogin(); });
+        signupOverlay.addEventListener('click', e => { if (e.target === signupOverlay) closeSignup(); });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { closeLogin(); closeSignup(); }
+        });
+
+        // ── 메시지 표시 ────────────────────────────────────────
+        function showMsg(type, text, isError = false) {
+            const el = document.getElementById(`${type}Msg`);
+            el.textContent = text;
+            el.className = `auth-msg ${isError ? 'error' : 'success'}`;
+        }
+        function clearMsg(type) {
+            const el = document.getElementById(`${type}Msg`);
+            el.textContent = '';
+            el.className = 'auth-msg';
+        }
+
+        // ── 헤더 상태 업데이트 ─────────────────────────────────
+        function updateHeader(user) {
+            const authBtns = document.getElementById('authBtns');
+            const headerUser = document.getElementById('headerUser');
+            const headerAvatar = document.getElementById('headerAvatar');
+            const headerUsername = document.getElementById('headerUsername');
+
+            if (user) {
+                const username = user.user_metadata?.username || user.email?.split('@')[0] || '사용자';
+                authBtns.style.display = 'none';
+                headerUser.classList.add('visible');
+                headerAvatar.textContent = username.charAt(0).toUpperCase();
+                headerUsername.textContent = username + '님';
+            } else {
+                authBtns.style.display = '';
+                headerUser.classList.remove('visible');
+            }
+        }
+
+        // ── 로그인 ─────────────────────────────────────────────
+        document.getElementById('loginSubmit').addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginSubmit');
+
+            if (!email || !password) {
+                showMsg('login', '이메일과 비밀번호를 모두 입력해주세요.', true);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '로그인 중...';
+
+            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+
+            btn.disabled = false;
+            btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> 로그인`;
+
+            if (error) {
+                const msg = error.message.includes('Invalid') ? '이메일 또는 비밀번호가 올바르지 않습니다.' : error.message;
+                showMsg('login', msg, true);
+            } else {
+                showMsg('login', '로그인 성공! 🎉');
+                updateHeader(data.user);
+                setTimeout(closeLogin, 900);
+            }
+        });
+
+        // Enter 키 로그인
+        ['loginEmail', 'loginPassword'].forEach(id => {
+            document.getElementById(id).addEventListener('keydown', e => {
+                if (e.key === 'Enter') document.getElementById('loginSubmit').click();
+            });
+        });
+
+        // ── 회원가입 ───────────────────────────────────────────
+        document.getElementById('signupSubmit').addEventListener('click', async () => {
+            const username = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const btn = document.getElementById('signupSubmit');
+
+            if (!username || !email || !password) {
+                showMsg('signup', '모든 항목을 입력해주세요.', true);
+                return;
+            }
+            if (password.length < 6) {
+                showMsg('signup', '비밀번호는 6자 이상이어야 합니다.', true);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '가입 중...';
+
+            const { data, error } = await _supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: { username, display_name: username }
+                }
+            });
+
+            btn.disabled = false;
+            btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg> 회원가입`;
+
+            if (error) {
+                const msg = error.message.includes('already') ? '이미 사용 중인 이메일입니다.' : error.message;
+                showMsg('signup', msg, true);
+            } else {
+                // 이메일 확인이 비활성화된 경우 바로 로그인 처리
+                if (data.user && data.session) {
+                    showMsg('signup', `환영합니다, ${username}님! 🎉`);
+                    updateHeader(data.user);
+                    setTimeout(closeSignup, 1000);
+                } else {
+                    showMsg('signup', '가입 완료! 이메일 인증 후 로그인해주세요. 📧');
+                }
+            }
+        });
+
+        // Enter 키 회원가입
+        ['signupName', 'signupEmail', 'signupPassword'].forEach(id => {
+            document.getElementById(id).addEventListener('keydown', e => {
+                if (e.key === 'Enter') document.getElementById('signupSubmit').click();
+            });
+        });
+
+        // ── 로그아웃 ───────────────────────────────────────────
+        document.getElementById('btnLogout').addEventListener('click', async () => {
+            await _supabase.auth.signOut();
+            updateHeader(null);
+        });
+
+        // ── 세션 복원 (페이지 새로고침 유지) ──────────────────
+        _supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) updateHeader(session.user);
+        });
+
+        // 실시간 로그인 상태 변화 감지
+        _supabase.auth.onAuthStateChange((_event, session) => {
+            updateHeader(session?.user || null);
+        });
     </script>
 
 </body>
