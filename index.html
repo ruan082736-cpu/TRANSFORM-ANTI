@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TRANSFORM - 콘텐츠 제작 도구</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --navy: #1a2b4a;
+            --navy-dark: #152238;
+            --accent: #1e3a6e;
+            --bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --border: #e2e6ed;
+            --text-primary: #1a2b4a;
+            --text-secondary: #6b7a99;
+            --text-muted: #a0aec0;
+            --yellow: #f6c517;
+            --radius: 16px;
+            --article-bg: #fafbfd;
+            --trend-hover: #f4f6f9;
+            --news-border: #f0f2f7;
+        }
+
+        /* ─── DARK MODE ───────────────────────────────────── */
+        body.dark {
+            --navy: #5b9bd6;
+            --navy-dark: #4a8bc4;
+            --accent: #3a6ea0;
+            --bg: #0f1117;
+            --card-bg: #1a1d27;
+            --border: #2a2f3d;
+            --text-primary: #e4e8f0;
+            --text-secondary: #8b95b0;
+            --text-muted: #555e78;
+            --article-bg: #13161f;
+            --trend-hover: #22263a;
+            --news-border: #22263a;
+        }
+
+        body {
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body:not(.dark) {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.dark {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ─── HEADER ─────────────────────────────────────── */
+        header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--navy);
+            text-transform: uppercase;
+        }
+
+        .logo-icon {
+            width: 34px;
+            height: 34px;
+            background: var(--navy);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: #fff;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: background 0.2s, color 0.3s;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg);
+        }
+
+        #darkToggle {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #darkToggle .icon-moon,
+        #darkToggle .icon-sun {
+            position: absolute;
+            transition: transform 0.35s ease, opacity 0.35s ease;
+        }
+
+        #darkToggle .icon-sun {
+            transform: translateY(30px) rotate(90deg);
+            opacity: 0;
+        }
+
+        body.dark #darkToggle .icon-moon {
+            transform: translateY(-30px) rotate(-90deg);
+            opacity: 0;
+        }
+
+        body.dark #darkToggle .icon-sun {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+            color: #f6c517;
+        }
+
+        .btn-text {
+            background: none;
+            border: none;
+            padding: 8px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--navy);
+            cursor: pointer;
+            border-radius: 8px;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+
+        .btn-text:hover {
+            background: var(--bg);
+        }
+
+        .btn-primary {
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            padding: 9px 22px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.18s;
+        }
+
+        .btn-primary:hover {
+            background: var(--navy-dark);
+        }
+
+        /* ─── MAIN LAYOUT ─────────────────────────────────── */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 248px 1fr 268px;
+            gap: 20px;
+            padding: 20px 24px;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* ─── CARD BASE ───────────────────────────────────── */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        /* ─── LEFT SIDEBAR: 설정 패널 ──────────────────────── */
+        .left-panel {
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            overflow-y: auto;
+            max-height: calc(100vh - 100px);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 22px;
+        }
+
+        .panel-title svg {
+            color: var(--text-secondary);
+        }
+
+        .section-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        /* 변환 유형 grid */
+        .type-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .type-btn {
+            border: 1.5px solid var(--border);
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 14px 10px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.18s;
+        }
+
+        .type-btn.active {
+            background: var(--navy);
+            border-color: var(--navy);
+            color: #fff;
+        }
+
+        .type-btn svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .type-btn:hover:not(.active) {
+            border-color: var(--navy);
+            color: var(--navy);
+        }
+
+        /* 디자인 스타일 */
+        .style-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .style-btn {
+            border: 1.5px solid var(--border);
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.18s;
+            font-family: inherit;
+            letter-spacing: 0.5px;
+        }
+
+        .style-btn.active {
+            background: var(--navy);
+            border-color: var(--navy);
+            color: #fff;
+        }
+
+        .style-btn:hover:not(.active) {
+            border-color: var(--navy);
+            color: var(--navy);
+        }
+
+        /* 이미지 비율 */
+        .ratio-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+
+        .ratio-btn {
+            border: 1.5px solid var(--border);
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.18s;
+            font-family: inherit;
+        }
+
+        .ratio-btn.active {
+            background: var(--navy);
+            border-color: var(--navy);
+            color: #fff;
+        }
+
+        .ratio-btn:hover:not(.active) {
+            border-color: var(--navy);
+            color: var(--navy);
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0 20px;
+        }
+
+        .btn-create {
+            width: 100%;
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.18s;
+            margin-bottom: 10px;
+        }
+
+        .btn-create:hover {
+            background: var(--navy-dark);
+        }
+
+        .btn-reset {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 400;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 6px;
+            text-align: center;
+            transition: color 0.18s;
+        }
+
+        .btn-reset:hover {
+            color: var(--text-secondary);
+        }
+
+        /* ─── CENTER PANEL ────────────────────────────────── */
+        .center-panel {
+            padding: 36px 32px 28px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .center-title {
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1.3;
+            color: var(--navy);
+            margin-bottom: 14px;
+        }
+
+        .center-title .highlight {
+            color: #1e6bb8;
+        }
+
+        .center-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-bottom: 22px;
+        }
+
+        .article-area {
+            flex: 1;
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 320px;
+            background: var(--article-bg);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .article-placeholder {
+            position: absolute;
+            top: 28px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 16px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .article-watermark {
+            pointer-events: none;
+            opacity: 0.07;
+        }
+
+        .article-watermark svg {
+            width: 220px;
+            height: 220px;
+            fill: var(--navy);
+        }
+
+        .center-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background: none;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 13px 30px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.18s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--navy);
+            color: var(--navy);
+        }
+
+        .btn-save {
+            background: var(--navy);
+            border: none;
+            border-radius: 12px;
+            padding: 13px 30px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.18s;
+        }
+
+        .btn-save:hover {
+            background: var(--navy-dark);
+        }
+
+        /* ─── RIGHT SIDEBAR ───────────────────────────────── */
+        .right-panel {
+            overflow-y: auto;
+            max-height: calc(100vh - 100px);
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .right-section {
+            padding: 22px 20px;
+        }
+
+        .right-section+.right-section {
+            border-top: 1px solid var(--border);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 16px;
+        }
+
+        .section-title-icon {
+            font-size: 16px;
+        }
+
+        /* 트렌드 리스트 */
+        .trend-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .trend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 4px;
+            border-bottom: 1px solid var(--news-border);
+            cursor: pointer;
+            transition: background 0.15s;
+            border-radius: 6px;
+        }
+
+        .trend-item:last-child {
+            border-bottom: none;
+        }
+
+        .trend-item:hover {
+            background: var(--trend-hover);
+        }
+
+        .trend-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .trend-num {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            width: 20px;
+            text-align: right;
+        }
+
+        .trend-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .trend-arrow {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* ─── 뉴스 검색 인풋 ─── */
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            background: var(--article-bg);
+            transition: border-color 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: var(--navy);
+        }
+
+        .search-box svg {
+            color: var(--text-muted);
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            background: none;
+            font-size: 13px;
+            color: var(--text-primary);
+            font-family: inherit;
+            outline: none;
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-box button {
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            padding: 2px;
+        }
+
+        .search-box button:hover {
+            color: var(--navy);
+        }
+
+        /* ─── 스켈레톤 로딩 ─── */
+        .skeleton {
+            background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 6px;
+            height: 13px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton.short {
+            width: 60%;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0
+            }
+
+            100% {
+                background-position: -200% 0
+            }
+        }
+
+        /* ─── 뉴스 카드 ─── */
+        .news-card {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--news-border);
+            cursor: pointer;
+            transition: opacity 0.18s;
+        }
+
+        .news-card:last-child {
+            border-bottom: none;
+        }
+
+        .news-card:hover {
+            opacity: 0.78;
+        }
+
+        .news-card-source {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .news-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--navy);
+            line-height: 1.45;
+            margin-bottom: 6px;
+        }
+
+        .news-summary {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-apply {
+            font-size: 11px;
+            font-weight: 600;
+            color: #1e6bb8;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .news-apply:hover {
+            text-decoration: underline;
+        }
+
+        /* ─── 뉴스 더보기 버튼 ─── */
+        .btn-load-more {
+            width: 100%;
+            margin-top: 12px;
+            padding: 9px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            background: none;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.18s;
+        }
+
+        .btn-load-more:hover {
+            border-color: var(--navy);
+            color: var(--navy);
+        }
+
+        /* ─── 스피너 ─── */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--navy);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ─── 모달 ─── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--card-bg);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 32px;
+            position: relative;
+            animation: modalIn 0.25s ease;
+            border: 1px solid var(--border);
+        }
+
+        @keyframes modalIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 18px;
+            right: 20px;
+            border: none;
+            background: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--text-muted);
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #1e6bb8;
+            background: rgba(30, 107, 184, 0.1);
+            border-radius: 20px;
+            padding: 3px 10px;
+            margin-bottom: 14px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.4;
+            margin-bottom: 14px;
+        }
+
+        .modal-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .modal-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 24px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn-apply {
+            flex: 1;
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 13px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .modal-btn-apply:hover {
+            opacity: 0.88;
+        }
+
+        .modal-btn-link {
+            flex: 1;
+            background: none;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 13px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: inherit;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .modal-btn-link:hover {
+            border-color: var(--navy);
+            color: var(--navy);
+        }
+
+        /* ─── 에러/빈 상태 ─── */
+        .empty-state {
+            text-align: center;
+            padding: 24px 0;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d0d5e0;
+            border-radius: 3px;
+        }
+
+        body.dark ::-webkit-scrollbar-thumb {
+            background: #3a3f55;
+        }
+
+        /* card 전환 부드럽게 */
+        .card,
+        header,
+        .type-btn,
+        .style-btn,
+        .ratio-btn,
+        .btn-text,
+        .btn-reset,
+        .search-row,
+        .section-label,
+        .panel-title {
+            transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ─── HEADER ──────────────────────────────────── -->
+    <header>
+        <div class="logo">
+            <div class="logo-icon">
+                <!-- infinity svg -->
+                <svg viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M20 12C20 12 15.5 4 10 4C5.58 4 2 7.58 2 12C2 16.42 5.58 20 10 20C15.5 20 20 12 20 12ZM20 12C20 12 24.5 20 30 20C34.42 20 38 16.42 38 12C38 7.58 34.42 4 30 4C24.5 4 20 12 20 12Z"
+                        stroke="white" stroke-width="3" fill="none" stroke-linecap="round" />
+                </svg>
+            </div>
+            TRANSFORM
+        </div>
+        <div class="header-right">
+            <!-- 다크모드 토글 -->
+            <button class="btn-icon" id="darkToggle" title="다크모드 전환">
+                <!-- 달 아이콘 (라이트 모드일 때 표시) -->
+                <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+                <!-- 해 아이콘 (다크 모드일 때 표시) -->
+                <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+            </button>
+            <button class="btn-text">로그인</button>
+            <button class="btn-primary">회원가입</button>
+        </div>
+    </header>
+
+    <!-- ─── MAIN ─────────────────────────────────────── -->
+    <main>
+
+        <!-- LEFT: 설정 패널 -->
+        <aside class="card left-panel">
+            <div class="panel-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+                    <path d="M22.66 12a10.82 10.82 0 0 1-3.07 7.59M4.41 4.41A10.82 10.82 0 0 0 1.34 12" />
+                </svg>
+                설정 패널
+            </div>
+
+            <!-- 변환 유형 -->
+            <div class="section-label">변환 유형</div>
+            <div class="type-grid">
+                <!-- 카드뉴스 -->
+                <button class="type-btn active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    카드뉴스
+                </button>
+                <!-- 블룀 -->
+                <button class="type-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M8 14s-4 1-4 5h16c0-4-4-5-4-5" />
+                    </svg>
+                    블룀
+                </button>
+                <!-- SNS -->
+                <button class="type-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3" />
+                        <circle cx="6" cy="12" r="3" />
+                        <circle cx="18" cy="19" r="3" />
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                    </svg>
+                    SNS
+                </button>
+                <!-- 숏폼 -->
+                <button class="type-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="7" y="2" width="10" height="20" rx="2" ry="2" />
+                        <line x1="12" y1="18" x2="12" y2="18" />
+                    </svg>
+                    숏폼
+                </button>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- 디자인 스타일 -->
+            <div class="section-label">디자인 스타일</div>
+            <div class="style-grid">
+                <button class="style-btn active">REAL</button>
+                <button class="style-btn">3D_Render</button>
+                <button class="style-btn">Flat</button>
+                <button class="style-btn">Sketch</button>
+                <button class="style-btn">Pixel</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- 이미지 비율 -->
+            <div class="section-label">이미지 비율</div>
+            <div class="ratio-grid">
+                <button class="ratio-btn">9:16</button>
+                <button class="ratio-btn active">1:1</button>
+                <button class="ratio-btn">16:9</button>
+                <button class="ratio-btn">4:5</button>
+            </div>
+
+            <button class="btn-create">콘텐츠 제작하기</button>
+            <button class="btn-reset">초기화</button>
+        </aside>
+
+        <!-- CENTER PANEL -->
+        <section class="card center-panel">
+            <h1 class="center-title">
+                어떤 이야기를 <span class="highlight">무한하게</span><br>만들어볼까요?
+            </h1>
+            <p class="center-subtitle">기사 내용을 입력하거나 우측의 실시간 뉴스를 활용해 아이디어를 얻어보세요.</p>
+
+            <div class="article-area">
+                <p class="article-placeholder">여기에 기사 내용을 붙여넣으세요...</p>
+                <div class="article-watermark">
+                    <svg viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M20 12C20 12 15.5 4 10 4C5.58 4 2 7.58 2 12C2 16.42 5.58 20 10 20C15.5 20 20 12 20 12ZM20 12C20 12 24.5 20 30 20C34.42 20 38 16.42 38 12C38 7.58 34.42 4 30 4C24.5 4 20 12 20 12Z"
+                            stroke="#1a2b4a" stroke-width="2" fill="none" stroke-linecap="round" />
+                    </svg>
+                </div>
+            </div>
+
+            <div class="center-actions">
+                <button class="btn-secondary">기사 재가공</button>
+                <button class="btn-save">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                        <polyline points="17 21 17 13 7 13 7 21" />
+                        <polyline points="7 3 7 8 15 8" />
+                    </svg>
+                    기사 저장
+                </button>
+            </div>
+        </section>
+
+        <!-- RIGHT SIDEBAR -->
+        <aside class="card right-panel" id="rightPanel">
+
+            <!-- 실시간 트렌드 -->
+            <div class="right-section">
+                <div class="section-title">
+                    <span class="section-title-icon">🏆</span>
+                    실시간 트렌드
+                    <span id="trendUpdated"
+                        style="margin-left:auto;font-size:10px;font-weight:400;color:var(--text-muted)"></span>
+                </div>
+                <div class="trend-list" id="trendList">
+                    <!-- 스켈레톤 로딩 -->
+                    <div class="skeleton" style="height:36px;border-radius:8px;margin-bottom:8px"></div>
+                    <div class="skeleton" style="height:36px;border-radius:8px;margin-bottom:8px"></div>
+                    <div class="skeleton" style="height:36px;border-radius:8px;margin-bottom:8px"></div>
+                    <div class="skeleton" style="height:36px;border-radius:8px;margin-bottom:8px"></div>
+                    <div class="skeleton" style="height:36px;border-radius:8px"></div>
+                </div>
+            </div>
+
+            <!-- 뉴스 검색 -->
+            <div class="right-section">
+                <div class="section-title">
+                    <span class="section-title-icon">📰</span>
+                    뉴스 검색
+                </div>
+
+                <!-- 검색창 -->
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="키워드를 입력하세요..." />
+                    <button id="searchBtn" title="검색">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- 뉴스 결과 -->
+                <div id="newsList">
+                    <div class="empty-state">🔍 키워드를 검색하거나<br>트렌드 항목을 클릭하세요</div>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- ─── 뉴스 상세 모달 ─── -->
+    <div class="modal-overlay" id="newsModal">
+        <div class="modal-box">
+            <button class="modal-close" id="modalClose">×</button>
+            <div class="modal-badge" id="modalBadge">뉴스</div>
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-meta" id="modalMeta"></div>
+            <div class="modal-desc" id="modalDesc"></div>
+            <div class="modal-actions">
+                <button class="modal-btn-apply" id="modalApply">📋 본문 에디터에 적용</button>
+                <a class="modal-btn-link" id="modalLink" target="_blank" rel="noopener">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                    원문 보기
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ════════════════════════════════════════════
+        //  다크모드 토글
+        // ════════════════════════════════════════════
+        const toggleBtn = document.getElementById('darkToggle');
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+        toggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+        });
+
+        // ════════════════════════════════════════════
+        //  설정: 프록시 API 베이스 URL
+        // ════════════════════════════════════════════
+        const API = 'http://localhost:5501';
+
+        // ════════════════════════════════════════════
+        //  HTML 태그 제거 유틸
+        // ════════════════════════════════════════════
+        function stripHtml(html) {
+            return html.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#[0-9]+;/g, '');
+        }
+
+        function formatDate(pubDate) {
+            if (!pubDate) return '';
+            const d = new Date(pubDate);
+            return d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        // ════════════════════════════════════════════
+        //  트렌딩 키워드 로드
+        // ════════════════════════════════════════════
+        async function loadTrending() {
+            const list = document.getElementById('trendList');
+            try {
+                const res = await fetch(`${API}/api/trending`);
+                const data = await res.json();
+                const keywords = data.keywords || [];
+
+                if (!keywords.length) {
+                    list.innerHTML = '<div class="empty-state">트렌딩 정보를 불러올 수 없습니다.</div>';
+                    return;
+                }
+
+                list.innerHTML = keywords.map((kw, i) => `
+                <div class="trend-item" data-keyword="${kw}">
+                    <div class="trend-left">
+                        <span class="trend-num">${String(i + 1).padStart(2, '0')}</span>
+                        <span class="trend-name">${kw}</span>
+                    </div>
+                    <span class="trend-arrow">›</span>
+                </div>
+            `).join('');
+
+                // 클릭 이벤트
+                list.querySelectorAll('.trend-item').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const kw = el.dataset.keyword;
+                        document.getElementById('searchInput').value = kw;
+                        searchNews(kw);
+                    });
+                });
+
+                const now = new Date();
+                document.getElementById('trendUpdated').textContent =
+                    now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) + ' 기준';
+
+            } catch (e) {
+                list.innerHTML = '<div class="empty-state">⚠️ 트렌딩 로드 실패<br><small>프록시 서버를 확인하세요</small></div>';
+            }
+        }
+
+        // ════════════════════════════════════════════
+        //  뉴스 검색
+        // ════════════════════════════════════════════
+        let currentQuery = '';
+        let currentStart = 1;
+        let currentItems = [];
+
+        async function searchNews(query, append = false) {
+            if (!query.trim()) return;
+
+            const list = document.getElementById('newsList');
+            if (!append) {
+                currentQuery = query;
+                currentStart = 1;
+                currentItems = [];
+                list.innerHTML = '<div class="spinner"></div>';
+            } else {
+                // 더보기: 기존 카드 아래 스피너
+                const spinner = document.createElement('div');
+                spinner.className = 'spinner';
+                spinner.id = 'appendSpinner';
+                list.appendChild(spinner);
+            }
+
+            try {
+                const res = await fetch(`${API}/api/news?query=${encodeURIComponent(query)}&display=5&sort=date&start=${currentStart}`);
+                const data = await res.json();
+                const items = data.items || [];
+
+                if (append) {
+                    const sp = document.getElementById('appendSpinner');
+                    if (sp) sp.remove();
+                }
+
+                if (!items.length && !append) {
+                    list.innerHTML = '<div class="empty-state">검색 결과가 없습니다.</div>';
+                    return;
+                }
+
+                currentItems = append ? [...currentItems, ...items] : items;
+                currentStart += items.length;
+
+                // 카드 렌더
+                const cardsHtml = currentItems.map((item, idx) => {
+                    const title = stripHtml(item.title);
+                    const desc = stripHtml(item.description);
+                    const pubDate = formatDate(item.pubDate);
+                    const link = item.link || item.originallink;
+                    return `
+                    <div class="news-card" data-idx="${idx}">
+                        <div class="news-card-source">${pubDate}</div>
+                        <div class="news-title">${title}</div>
+                        <div class="news-summary">${desc}</div>
+                        <a class="news-apply" href="#" data-idx="${idx}">📋 본문 바로 적용</a>
+                    </div>
+                `;
+                }).join('');
+
+                const moreBtn = data.total > currentStart
+                    ? `<button class="btn-load-more" id="loadMoreBtn">더보기 (총 ${Number(data.total).toLocaleString()}건)</button>`
+                    : '';
+
+                if (!append) {
+                    list.innerHTML = cardsHtml + moreBtn;
+                } else {
+                    // 기존 더보기 버튼 제거하고 새 카드 + 버튼 추가
+                    const oldMore = document.getElementById('loadMoreBtn');
+                    if (oldMore) oldMore.remove();
+                    list.insertAdjacentHTML('beforeend', cardsHtml.replace(currentItems.slice(0, currentStart - items.length).map((_, i) => `data-idx="${i}"`).join('|'), '') + moreBtn);
+                    // 좀 더 단순하게: 전체 재렌더
+                    list.innerHTML = cardsHtml + moreBtn;
+                }
+
+                // 카드 클릭 → 모달
+                list.querySelectorAll('.news-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('news-apply')) return; // 적용 버튼은 별도
+                        const idx = parseInt(card.dataset.idx);
+                        openModal(currentItems[idx]);
+                    });
+                });
+
+                // 적용 버튼 클릭
+                list.querySelectorAll('.news-apply').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const idx = parseInt(btn.dataset.idx);
+                        applyToEditor(currentItems[idx]);
+                    });
+                });
+
+                // 더보기 버튼
+                const loadMoreBtn = document.getElementById('loadMoreBtn');
+                if (loadMoreBtn) {
+                    loadMoreBtn.addEventListener('click', () => searchNews(currentQuery, true));
+                }
+
+            } catch (e) {
+                list.innerHTML = '<div class="empty-state">⚠️ 검색 실패<br><small>프록시 서버(5501)가 실행 중인지 확인하세요</small></div>';
+            }
+        }
+
+        // ════════════════════════════════════════════
+        //  모달
+        // ════════════════════════════════════════════
+        function openModal(item) {
+            const title = stripHtml(item.title);
+            const desc = stripHtml(item.description);
+            const date = formatDate(item.pubDate);
+            const link = item.link || item.originallink;
+
+            document.getElementById('modalBadge').textContent = '네이버 뉴스';
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMeta').textContent = date ? `📅 ${date}` : '';
+            document.getElementById('modalDesc').textContent = desc || '본문 내용이 없습니다.';
+            document.getElementById('modalLink').href = link;
+
+            document.getElementById('modalApply').onclick = () => {
+                applyToEditor(item);
+                closeModal();
+            };
+
+            document.getElementById('newsModal').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('newsModal').classList.remove('open');
+        }
+
+        document.getElementById('modalClose').addEventListener('click', closeModal);
+        document.getElementById('newsModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('newsModal')) closeModal();
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+        // ════════════════════════════════════════════
+        //  에디터에 적용
+        // ════════════════════════════════════════════
+        function applyToEditor(item) {
+            const title = stripHtml(item.title);
+            const desc = stripHtml(item.description);
+            const date = formatDate(item.pubDate);
+            const link = item.link || item.originallink;
+            const text = `[${title}]\n\n${desc}\n\n출처: ${link}\n일자: ${date}`;
+
+            // article-area 내부에 텍스트 표시
+            const area = document.querySelector('.article-area');
+            const placeholder = document.querySelector('.article-placeholder');
+            const watermark = document.querySelector('.article-watermark');
+
+            if (placeholder) placeholder.style.display = 'none';
+            if (watermark) watermark.style.display = 'none';
+
+            let ta = document.getElementById('editorContent');
+            if (!ta) {
+                ta = document.createElement('textarea');
+                ta.id = 'editorContent';
+                ta.style.cssText = `
+                width:100%; height:100%; border:none; background:transparent;
+                font-family:inherit; font-size:14px; color:var(--text-primary);
+                resize:none; outline:none; padding:20px; line-height:1.8;
+                box-sizing:border-box;
+            `;
+                area.appendChild(ta);
+            }
+            ta.value = text;
+            ta.focus();
+        }
+
+        // ════════════════════════════════════════════
+        //  검색창 이벤트
+        // ════════════════════════════════════════════
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const q = document.getElementById('searchInput').value.trim();
+            if (q) searchNews(q);
+        });
+        document.getElementById('searchInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const q = e.target.value.trim();
+                if (q) searchNews(q);
+            }
+        });
+
+        // ════════════════════════════════════════════
+        //  초기 실행
+        // ════════════════════════════════════════════
+        loadTrending();
+
+    </script>
+
+</body>
+
+</html>
