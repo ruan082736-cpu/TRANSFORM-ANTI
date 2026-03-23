@@ -3879,14 +3879,10 @@
             }
         })();
 
-        // ── 모달 요소 ──────────────────────────────────────────
-        const loginOverlay = document.getElementById('loginOverlay');
-        const signupOverlay = document.getElementById('signupOverlay');
-
-        function openLogin() { loginOverlay.classList.add('open'); clearMsg('login'); }
-        function closeLogin() { loginOverlay.classList.remove('open'); }
-        function openSignup() { signupOverlay.classList.add('open'); clearMsg('signup'); }
-        function closeSignup() { signupOverlay.classList.remove('open'); }
+        function openLogin() { document.getElementById('loginOverlay').classList.add('open'); clearMsg('login'); }
+        function closeLogin() { document.getElementById('loginOverlay').classList.remove('open'); }
+        function openSignup() { document.getElementById('signupOverlay').classList.add('open'); clearMsg('signup'); }
+        function closeSignup() { document.getElementById('signupOverlay').classList.remove('open'); }
 
         // 버튼 이벤트
         document.getElementById('btnLogin').addEventListener('click', openLogin);
