@@ -3388,7 +3388,20 @@
         // ════════════════════════════════════════════
         //  설정: 프록시 API 베이스 URL
         // ════════════════════════════════════════════
-        const API = 'http://localhost:5501';
+        const API = 'https://tangy-bears-joke.loca.lt';
+
+        // fetch 함수 전역 오버라이딩: localtunnel 'Bypass-Tunnel-Reminder' 헤더 자동 주입
+        const originalFetch = window.fetch;
+        window.fetch = async function () {
+            let [resource, config] = arguments;
+            if (typeof resource === 'string' && resource.startsWith(API)) {
+                config = config || {};
+                config.headers = config.headers || {};
+                config.headers['Bypass-Tunnel-Reminder'] = 'true';
+                config.headers['ngrok-skip-browser-warning'] = 'true'; // ngrok 대비
+            }
+            return originalFetch(resource, config);
+        };
 
         // ════════════════════════════════════════════
         //  HTML 태그 제거 유틸
