@@ -1,0 +1,7 @@
+file 'C:/Users/PC/Desktop/2026-01-19/29.03.09(1010)/output/short_900cf4eb/news_01.png'
+duration 3.77
+file 'C:/Users/PC/Desktop/2026-01-19/29.03.09(1010)/output/short_900cf4eb/news_02.png'
+duration 8.81
+file 'C:/Users/PC/Desktop/2026-01-19/29.03.09(1010)/output/short_900cf4eb/news_03.png'
+duration 5.85
+file 'C:/Users/PC/Desktop/2026-01-19/29.03.09(1010)/output/short_900cf4eb/news_03.png'

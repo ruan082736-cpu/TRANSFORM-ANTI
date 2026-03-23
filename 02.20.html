@@ -1,0 +1,2866 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TRANSFORM - 콘텐츠 제작 도구</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --navy: #1a2b4a;
+            --navy-dark: #152238;
+            --accent: #1e3a6e;
+            --bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --border: #e2e6ed;
+            --text-primary: #1a2b4a;
+            --text-secondary: #6b7a99;
+            --text-muted: #a0aec0;
+            --yellow: #f6c517;
+            --radius: 16px;
+            --article-bg: #fafbfd;
+            --trend-hover: #f4f6f9;
+            --news-border: #f0f2f7;
+        }
+
+        /* ─── DARK MODE ───────────────────────────────────── */
+        body.dark {
+            --navy: #5b9bd6;
+            --navy-dark: #4a8bc4;
+            --accent: #3a6ea0;
+            --bg: #0f1117;
+            --card-bg: #1a1d27;
+            --border: #2a2f3d;
+            --text-primary: #e4e8f0;
+            --text-secondary: #8b95b0;
+            --text-muted: #555e78;
+            --article-bg: #13161f;
+            --trend-hover: #22263a;
+            --news-border: #22263a;
+        }
+
+        body {
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body:not(.dark) {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.dark {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ─── HEADER ─────────────────────────────────────── */
+        header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--navy);
+            text-transform: uppercase;
+        }
+
+        .logo-icon {
+            width: 34px;
+            height: 34px;
+            background: var(--navy);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: #fff;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: background 0.2s, color 0.3s;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg);
+        }
+
+        #darkToggle {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #darkToggle .icon-moon,
+        #darkToggle .icon-sun {
+            position: absolute;
+            transition: transform 0.35s ease, opacity 0.35s ease;
+        }
+
+        #darkToggle .icon-sun {
+            transform: translateY(30px) rotate(90deg);
+            opacity: 0;
+        }
+
+        body.dark #darkToggle .icon-moon {
+            transform: translateY(-30px) rotate(-90deg);
+            opacity: 0;
+        }
+
+        body.dark #darkToggle .icon-sun {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+            color: #f6c517;
+        }
+
+        .btn-text {
+            background: none;
+            border: none;
+            padding: 8px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--navy);
+            cursor: pointer;
+            border-radius: 8px;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+
+        .btn-text:hover {
+            background: var(--bg);
+        }
+
+        .btn-primary {
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            padding: 9px 22px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.18s;
+        }
+
+        .btn-primary:hover {
+            background: var(--navy-dark);
+        }
+
+        /* ─── MAIN LAYOUT ─────────────────────────────────── */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 248px 1fr 268px;
+            gap: 20px;
+            padding: 20px 24px;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* ─── CARD BASE ───────────────────────────────────── */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        /* ─── LEFT SIDEBAR: 설정 패널 ──────────────────────── */
+        .left-panel {
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            overflow-y: auto;
+            max-height: calc(100vh - 100px);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 22px;
+        }
+
+        .panel-title svg {
+            color: var(--text-secondary);
+        }
+
+        .section-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        /* 변환 유형 grid */
+        .type-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .type-btn {
+            border: 1.5px solid var(--border);
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 14px 10px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.18s;
+        }
+
+        .type-btn.active {
+            background: var(--navy);
+            border-color: var(--navy);
+            color: #fff;
+        }
+
+        .type-btn svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .type-btn:hover:not(.active) {
+            border-color: var(--navy);
+            color: var(--navy);
+        }
+
+        /* 디자인 스타일 */
+        .style-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .style-btn {
+            border: 1.5px solid var(--border);
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.18s;
+            font-family: inherit;
+            letter-spacing: 0.5px;
+        }
+
+        .style-btn.active {
+            background: var(--navy);
+            border-color: var(--navy);
+            color: #fff;
+        }
+
+        .style-btn:hover:not(.active) {
+            border-color: var(--navy);
+            color: var(--navy);
+        }
+
+        /* 이미지 비율 */
+        .ratio-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+
+        .ratio-btn {
+            border: 1.5px solid var(--border);
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.18s;
+            font-family: inherit;
+        }
+
+        .ratio-btn.active {
+            background: var(--navy);
+            border-color: var(--navy);
+            color: #fff;
+        }
+
+        .ratio-btn:hover:not(.active) {
+            border-color: var(--navy);
+            color: var(--navy);
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0 20px;
+        }
+
+        .btn-create {
+            width: 100%;
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.18s;
+            margin-bottom: 10px;
+        }
+
+        .btn-create:hover {
+            background: var(--navy-dark);
+        }
+
+        .btn-reset {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 400;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 6px;
+            text-align: center;
+            transition: color 0.18s;
+        }
+
+        .btn-reset:hover {
+            color: var(--text-secondary);
+        }
+
+        /* ─── CENTER PANEL ────────────────────────────────── */
+        .center-panel {
+            padding: 36px 32px 28px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .center-title {
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1.3;
+            color: var(--navy);
+            margin-bottom: 14px;
+        }
+
+        .center-title .highlight {
+            color: #1e6bb8;
+        }
+
+        .center-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-bottom: 22px;
+        }
+
+        .article-area {
+            flex: 1;
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 320px;
+            background: var(--article-bg);
+            transition: background 0.3s ease, border-color 0.3s ease;
+            cursor: text;
+        }
+
+        .article-area:focus-within {
+            border-color: var(--navy);
+            box-shadow: 0 0 0 3px rgba(26, 43, 74, 0.08);
+        }
+
+        /* 입력 에디터 */
+        .article-editor {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            padding: 22px 24px;
+            outline: none;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.9;
+            color: var(--text-primary);
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            min-height: 320px;
+        }
+
+        /* placeholder: 내용 없을 때만 보임 */
+        .article-editor:empty::before {
+            content: attr(data-placeholder);
+            color: var(--text-muted);
+            pointer-events: none;
+            display: block;
+        }
+
+        .article-placeholder {
+            display: none;
+            /* contenteditable 방식으로 대체 */
+        }
+
+        .article-watermark {
+            pointer-events: none;
+            opacity: 0.07;
+            position: absolute;
+            bottom: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            z-index: 1;
+            transition: opacity 0.3s;
+        }
+
+        .article-watermark.hidden {
+            opacity: 0;
+        }
+
+        /* 글자 수 카운터 */
+        .article-counter {
+            position: absolute;
+            bottom: 10px;
+            right: 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+            z-index: 3;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .article-watermark svg {
+            width: 220px;
+            height: 220px;
+            fill: var(--navy);
+        }
+
+        .center-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background: none;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 13px 30px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.18s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--navy);
+            color: var(--navy);
+        }
+
+        .btn-save {
+            background: var(--navy);
+            border: none;
+            border-radius: 12px;
+            padding: 13px 30px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.18s;
+        }
+
+        .btn-save:hover {
+            background: var(--navy-dark);
+        }
+
+        /* ─── RIGHT SIDEBAR ───────────────────────────────── */
+        .right-panel {
+            overflow-y: auto;
+            max-height: calc(100vh - 100px);
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .right-section {
+            padding: 22px 20px;
+        }
+
+        .right-section+.right-section {
+            border-top: 1px solid var(--border);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 16px;
+        }
+
+        .section-title-icon {
+            font-size: 16px;
+        }
+
+        /* 트렌드 리스트 */
+        .trend-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .trend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 4px;
+            border-bottom: 1px solid var(--news-border);
+            cursor: pointer;
+            transition: background 0.15s;
+            border-radius: 6px;
+        }
+
+        .trend-item:last-child {
+            border-bottom: none;
+        }
+
+        .trend-item:hover {
+            background: var(--trend-hover);
+        }
+
+        .trend-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .trend-num {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            width: 20px;
+            text-align: right;
+        }
+
+        .trend-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .trend-arrow {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* ─── 뉴스 검색 인풋 ─── */
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            background: var(--article-bg);
+            transition: border-color 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: var(--navy);
+        }
+
+        .search-box svg {
+            color: var(--text-muted);
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            background: none;
+            font-size: 13px;
+            color: var(--text-primary);
+            font-family: inherit;
+            outline: none;
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-box button {
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            padding: 2px;
+        }
+
+        .search-box button:hover {
+            color: var(--navy);
+        }
+
+        /* ─── 스켈레톤 로딩 ─── */
+        .skeleton {
+            background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 6px;
+            height: 13px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton.short {
+            width: 60%;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0
+            }
+
+            100% {
+                background-position: -200% 0
+            }
+        }
+
+        /* ─── 뉴스 카드 ─── */
+        .news-card {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--news-border);
+            cursor: pointer;
+            transition: opacity 0.18s;
+        }
+
+        .news-card:last-child {
+            border-bottom: none;
+        }
+
+        .news-card:hover {
+            opacity: 0.78;
+        }
+
+        .news-card-source {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .news-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--navy);
+            line-height: 1.45;
+            margin-bottom: 6px;
+        }
+
+        .news-summary {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-apply {
+            font-size: 11px;
+            font-weight: 600;
+            color: #1e6bb8;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .news-apply:hover {
+            text-decoration: underline;
+        }
+
+        /* ─── 뉴스 더보기 버튼 ─── */
+        .btn-load-more {
+            width: 100%;
+            margin-top: 12px;
+            padding: 9px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            background: none;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.18s;
+        }
+
+        .btn-load-more:hover {
+            border-color: var(--navy);
+            color: var(--navy);
+        }
+
+        /* ─── 스피너 ─── */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--navy);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ─── 모달 ─── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--card-bg);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 32px;
+            position: relative;
+            animation: modalIn 0.25s ease;
+            border: 1px solid var(--border);
+        }
+
+        @keyframes modalIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 18px;
+            right: 20px;
+            border: none;
+            background: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--text-muted);
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #1e6bb8;
+            background: rgba(30, 107, 184, 0.1);
+            border-radius: 20px;
+            padding: 3px 10px;
+            margin-bottom: 14px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.4;
+            margin-bottom: 14px;
+        }
+
+        .modal-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .modal-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 24px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn-apply {
+            flex: 1;
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 13px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .modal-btn-apply:hover {
+            opacity: 0.88;
+        }
+
+        .modal-btn-link {
+            flex: 1;
+            background: none;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 13px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: inherit;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .modal-btn-link:hover {
+            border-color: var(--navy);
+            color: var(--navy);
+        }
+
+        /* ─── 에러/빈 상태 ─── */
+        .empty-state {
+            text-align: center;
+            padding: 24px 0;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d0d5e0;
+            border-radius: 3px;
+        }
+
+        body.dark ::-webkit-scrollbar-thumb {
+            background: #3a3f55;
+        }
+
+        /* card 전환 부드럽게 */
+        .card,
+        header,
+        .type-btn,
+        .style-btn,
+        .ratio-btn,
+        .btn-text,
+        .btn-reset,
+        .search-row,
+        .section-label,
+        .panel-title {
+            transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* ─── 토스트 알림 ─── */
+        .toast-container {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+            animation: toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            white-space: nowrap;
+        }
+
+        .toast.success {
+            background: #16a34a;
+        }
+
+        .toast.error {
+            background: #dc2626;
+        }
+
+        .toast.info {
+            background: var(--navy);
+        }
+
+        .toast.warning {
+            background: #d97706;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(8px) scale(0.95);
+            }
+        }
+
+        /* ─── 저장된 기사 패널 (좌측 하단 슬라이드) ─── */
+        .saved-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1500;
+            background: var(--card-bg);
+            border-top: 1.5px solid var(--border);
+            border-radius: 20px 20px 0 0;
+            padding: 0;
+            max-height: 55vh;
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .saved-panel.open {
+            transform: translateY(0);
+        }
+
+        .saved-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px 14px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .saved-panel-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .saved-panel-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .saved-list {
+            overflow-y: auto;
+            flex: 1;
+            padding: 12px 24px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .saved-item {
+            background: var(--article-bg);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: border-color 0.18s, background 0.18s;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .saved-item:hover {
+            border-color: var(--navy);
+            background: var(--trend-hover);
+        }
+
+        .saved-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .saved-item-preview {
+            font-size: 13px;
+            color: var(--text-primary);
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .saved-item-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .saved-item-del {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 4px;
+            flex-shrink: 0;
+            transition: color 0.15s;
+        }
+
+        .saved-item-del:hover {
+            color: #dc2626;
+        }
+
+        .saved-empty {
+            text-align: center;
+            padding: 32px 0;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* ─── 재가공 오버레이 ─── */
+        .reprocess-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(6px);
+        }
+
+        .reprocess-overlay.open {
+            display: flex;
+        }
+
+        .reprocess-box {
+            background: var(--card-bg);
+            border-radius: 20px;
+            width: 92%;
+            max-width: 500px;
+            padding: 32px;
+            border: 1.5px solid var(--border);
+            animation: modalIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .reprocess-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .reprocess-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .reprocess-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .reprocess-opt {
+            padding: 14px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            background: var(--article-bg);
+            cursor: pointer;
+            text-align: left;
+            font-family: inherit;
+            transition: all 0.18s;
+        }
+
+        .reprocess-opt:hover,
+        .reprocess-opt.selected {
+            border-color: var(--navy);
+            background: rgba(26, 43, 74, 0.06);
+        }
+
+        .reprocess-opt-icon {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+
+        .reprocess-opt-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .reprocess-opt-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .reprocess-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .reprocess-cancel {
+            padding: 10px 20px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            background: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .reprocess-apply {
+            padding: 10px 24px;
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: opacity 0.18s;
+        }
+
+
+        /* ─── 제작 로딩 (스피너) ─── */
+        .creation-loading {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 17, 23, 0.92);
+            z-index: 3000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .creation-loading.open {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--navy);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 24px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .loading-sub {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* ─── 완료 모달 (결과물) ─── */
+        .result-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 3001;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(8px);
+        }
+
+        .result-overlay.open {
+            display: flex;
+        }
+
+        .result-box {
+            background: var(--card-bg);
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 480px;
+            overflow: hidden;
+            animation: modalIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .result-img-area {
+            width: 100%;
+            aspect-ratio: 1/1;
+            /* 일단 1:1 디폴트 */
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .result-dummy-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+        }
+
+        .result-badge {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+        }
+
+        .result-actions {
+            padding: 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-download {
+            flex: 1;
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-share {
+            width: 50px;
+            background: var(--article-bg);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .btn-close-result {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .auth-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(6px);
+        }
+
+        .auth-overlay.open {
+            display: flex;
+        }
+
+        .auth-box {
+            background: var(--card-bg);
+            border-radius: 24px;
+            width: 92%;
+            max-width: 420px;
+            padding: 40px 36px 36px;
+            position: relative;
+            border: 1px solid var(--border);
+            animation: modalIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+
+        .auth-logo-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--navy);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-logo-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .auth-logo-text {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--navy);
+        }
+
+        .auth-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .auth-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .auth-field {
+            margin-bottom: 16px;
+        }
+
+        .auth-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 7px;
+            display: block;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            background: var(--article-bg);
+            font-size: 14px;
+            color: var(--text-primary);
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .auth-input:focus {
+            border-color: var(--navy);
+        }
+
+        .auth-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 8px;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .auth-btn:hover {
+            opacity: 0.88;
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .auth-switch a {
+            color: #1e6bb8;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-msg {
+            margin-top: 14px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .auth-msg.error {
+            background: rgba(220, 38, 38, 0.08);
+            color: #dc2626;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            display: block;
+        }
+
+        .auth-msg.success {
+            background: rgba(22, 163, 74, 0.08);
+            color: #16a34a;
+            border: 1px solid rgba(22, 163, 74, 0.2);
+            display: block;
+        }
+
+        .auth-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 22px 0;
+        }
+
+        /* 로그인 후 헤더 유저 정보 */
+        .header-user {
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-user.visible {
+            display: flex;
+        }
+
+        .header-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--navy);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .header-username {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .btn-logout {
+            padding: 7px 16px;
+            border: 1.5px solid var(--border);
+            background: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.18s;
+        }
+
+        .btn-logout:hover {
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ─── HEADER ──────────────────────────────────── -->
+    <header>
+        <div class="logo">
+            <div class="logo-icon">
+                <!-- infinity svg -->
+                <svg viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M20 12C20 12 15.5 4 10 4C5.58 4 2 7.58 2 12C2 16.42 5.58 20 10 20C15.5 20 20 12 20 12ZM20 12C20 12 24.5 20 30 20C34.42 20 38 16.42 38 12C38 7.58 34.42 4 30 4C24.5 4 20 12 20 12Z"
+                        stroke="white" stroke-width="3" fill="none" stroke-linecap="round" />
+                </svg>
+            </div>
+            TRANSFORM
+        </div>
+        <div class="header-right">
+            <!-- 다크모드 토글 -->
+            <button class="btn-icon" id="darkToggle" title="다크모드 전환">
+                <!-- 달 아이콘 (라이트 모드일 때 표시) -->
+                <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+                <!-- 해 아이콘 (다크 모드일 때 표시) -->
+                <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+            </button>
+            <!-- 비로그인 상태 -->
+            <div id="authBtns">
+                <button class="btn-text" id="btnLogin">로그인</button>
+                <button class="btn-primary" id="btnSignup">회원가입</button>
+            </div>
+            <!-- 로그인 상태 -->
+            <div class="header-user" id="headerUser">
+                <div class="header-avatar" id="headerAvatar">U</div>
+                <span class="header-username" id="headerUsername">사용자</span>
+                <button class="btn-logout" id="btnLogout">로그아웃</button>
+            </div>
+        </div>
+    </header>
+
+    <style>
+        .btn-reprocess-highlight {
+            background: #eef2ff;
+            color: var(--navy);
+            border: 1.5px solid var(--navy);
+            font-weight: 700;
+        }
+
+        .btn-reprocess-highlight:hover {
+            background: #dbe4ff;
+        }
+    </style>
+
+    <!-- ─── MAIN ─────────────────────────────────────── -->
+    <main>
+
+        <!-- LEFT: 설정 패널 -->
+        <aside class="card left-panel">
+            <div class="panel-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+                    <path d="M22.66 12a10.82 10.82 0 0 1-3.07 7.59M4.41 4.41A10.82 10.82 0 0 0 1.34 12" />
+                </svg>
+                설정 패널
+            </div>
+
+            <!-- 변환 유형 -->
+            <div class="section-label">변환 유형</div>
+            <div class="type-grid">
+                <!-- 카드뉴스 -->
+                <button class="type-btn active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    카드뉴스
+                </button>
+                <!-- 블룀 -->
+                <button class="type-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M8 14s-4 1-4 5h16c0-4-4-5-4-5" />
+                    </svg>
+                    블룀
+                </button>
+                <!-- SNS -->
+                <button class="type-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3" />
+                        <circle cx="6" cy="12" r="3" />
+                        <circle cx="18" cy="19" r="3" />
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                    </svg>
+                    SNS
+                </button>
+                <!-- 숏폼 -->
+                <button class="type-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="7" y="2" width="10" height="20" rx="2" ry="2" />
+                        <line x1="12" y1="18" x2="12" y2="18" />
+                    </svg>
+                    숏폼
+                </button>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- 디자인 스타일 -->
+            <div class="section-label">디자인 스타일</div>
+            <div class="style-grid">
+                <button class="style-btn active">REAL</button>
+                <button class="style-btn">3D_Render</button>
+                <button class="style-btn">Flat</button>
+                <button class="style-btn">Sketch</button>
+                <button class="style-btn">Pixel</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- 이미지 비율 -->
+            <div class="section-label">이미지 비율</div>
+            <div class="ratio-grid">
+                <button class="ratio-btn">9:16</button>
+                <button class="ratio-btn active">1:1</button>
+                <button class="ratio-btn">16:9</button>
+                <button class="ratio-btn">4:5</button>
+            </div>
+
+            <button class="btn-create" id="btnCreate">🎨 이미지 콘텐츠 제작</button>
+            <button class="btn-reset" id="btnReset">초기화</button>
+        </aside>
+
+        <!-- CENTER PANEL -->
+        <section class="card center-panel">
+            <h1 class="center-title">
+                어떤 이야기를 <span class="highlight">무한하게</span><br>만들어볼까요?
+            </h1>
+            <p class="center-subtitle">기사 내용을 입력하거나 우측의 실시간 뉴스를 활용해 아이디어를 얻어보세요.</p>
+
+            <div class="article-area" id="articleArea">
+                <!-- 직접 입력 에디터 (contenteditable) -->
+                <div class="article-editor" id="articleEditor" contenteditable="true" spellcheck="false"
+                    data-placeholder="여기에 기사 내용을 직접 입력하거나 붙여넣으세요..."></div>
+                <!-- 워터마크: 내용 없을 때만 표시 -->
+                <div class="article-watermark" id="articleWatermark">
+                    <svg viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M20 12C20 12 15.5 4 10 4C5.58 4 2 7.58 2 12C2 16.42 5.58 20 10 20C15.5 20 20 12 20 12ZM20 12C20 12 24.5 20 30 20C34.42 20 38 16.42 38 12C38 7.58 34.42 4 30 4C24.5 4 20 12 20 12Z"
+                            stroke="#1a2b4a" stroke-width="2" fill="none" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <!-- 글자 수 카운터 -->
+                <span class="article-counter" id="articleCounter">0자</span>
+            </div>
+
+            <div class="center-actions">
+                <button class="btn-secondary btn-reprocess-highlight" id="btnReprocess">✏️ 기사텍스트 재가공 (요약/변환)</button>
+                <button class="btn-save" id="btnSave">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                        <polyline points="17 21 17 13 7 13 7 21" />
+                        <polyline points="7 3 7 8 15 8" />
+                    </svg>
+                    기사 저장
+                </button>
+            </div>
+        </section>
+
+        <!-- RIGHT SIDEBAR -->
+        <aside class="card right-panel" id="rightPanel">
+
+            <!-- 실시간 트렌드 -->
+            <div class="right-section">
+                <div class="section-title">
+                    <span class="section-title-icon">🏆</span>
+                    실시간 트렌드
+                    <span id="trendUpdated"
+                        style="margin-left:auto;font-size:10px;font-weight:400;color:var(--text-muted)"></span>
+                </div>
+                <div class="trend-list" id="trendList">
+                    <!-- 스켈레톤 로딩 -->
+                    <div class="skeleton" style="height:36px;border-radius:8px;margin-bottom:8px"></div>
+                    <div class="skeleton" style="height:36px;border-radius:8px;margin-bottom:8px"></div>
+                    <div class="skeleton" style="height:36px;border-radius:8px;margin-bottom:8px"></div>
+                    <div class="skeleton" style="height:36px;border-radius:8px;margin-bottom:8px"></div>
+                    <div class="skeleton" style="height:36px;border-radius:8px"></div>
+                </div>
+            </div>
+
+            <!-- 뉴스 검색 -->
+            <div class="right-section">
+                <div class="section-title">
+                    <span class="section-title-icon">📰</span>
+                    뉴스 검색
+                </div>
+
+                <!-- 검색창 -->
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="키워드를 입력하세요..." />
+                    <button id="searchBtn" title="검색">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- 뉴스 결과 -->
+                <div id="newsList">
+                    <div class="empty-state">🔍 키워드를 검색하거나<br>트렌드 항목을 클릭하세요</div>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- ─── 뉴스 상세 모달 ─── -->
+    <div class="modal-overlay" id="newsModal">
+        <div class="modal-box">
+            <button class="modal-close" id="modalClose">×</button>
+            <div class="modal-badge" id="modalBadge">뉴스</div>
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-meta" id="modalMeta"></div>
+            <div class="modal-desc" id="modalDesc"></div>
+            <div class="modal-actions">
+                <button class="modal-btn-apply" id="modalApply">📋 본문 에디터에 적용</button>
+                <a class="modal-btn-link" id="modalLink" target="_blank" rel="noopener">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                    원문 보기
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ════════════════════════════════════════════
+        //  다크모드 토글
+        // ════════════════════════════════════════════
+        const toggleBtn = document.getElementById('darkToggle');
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+        toggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+        });
+
+        // ════════════════════════════════════════════
+        //  설정: 프록시 API 베이스 URL
+        // ════════════════════════════════════════════
+        const API = 'http://localhost:5501';
+
+        // ════════════════════════════════════════════
+        //  HTML 태그 제거 유틸
+        // ════════════════════════════════════════════
+        function stripHtml(html) {
+            return html.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#[0-9]+;/g, '');
+        }
+
+        function formatDate(pubDate) {
+            if (!pubDate) return '';
+            const d = new Date(pubDate);
+            return d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        // ════════════════════════════════════════════
+        //  트렌딩 키워드 로드
+        // ════════════════════════════════════════════
+        async function loadTrending() {
+            const list = document.getElementById('trendList');
+            try {
+                const res = await fetch(`${API}/api/trending`);
+                const data = await res.json();
+                const keywords = data.keywords || [];
+
+                if (!keywords.length) {
+                    list.innerHTML = '<div class="empty-state">트렌딩 정보를 불러올 수 없습니다.</div>';
+                    return;
+                }
+
+                list.innerHTML = keywords.map((kw, i) => `
+                <div class="trend-item" data-keyword="${kw}">
+                    <div class="trend-left">
+                        <span class="trend-num">${String(i + 1).padStart(2, '0')}</span>
+                        <span class="trend-name">${kw}</span>
+                    </div>
+                    <span class="trend-arrow">›</span>
+                </div>
+            `).join('');
+
+                // 클릭 이벤트
+                list.querySelectorAll('.trend-item').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const kw = el.dataset.keyword;
+                        document.getElementById('searchInput').value = kw;
+                        searchNews(kw);
+                    });
+                });
+
+                const now = new Date();
+                document.getElementById('trendUpdated').textContent =
+                    now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) + ' 기준';
+
+            } catch (e) {
+                list.innerHTML = '<div class="empty-state">⚠️ 트렌딩 로드 실패<br><small>프록시 서버를 확인하세요</small></div>';
+            }
+        }
+
+        // ════════════════════════════════════════════
+        //  뉴스 검색
+        // ════════════════════════════════════════════
+        let currentQuery = '';
+        let currentStart = 1;
+        let currentItems = [];
+
+        async function searchNews(query, append = false) {
+            if (!query.trim()) return;
+
+            const list = document.getElementById('newsList');
+            if (!append) {
+                currentQuery = query;
+                currentStart = 1;
+                currentItems = [];
+                list.innerHTML = '<div class="spinner"></div>';
+            } else {
+                // 더보기: 기존 카드 아래 스피너
+                const spinner = document.createElement('div');
+                spinner.className = 'spinner';
+                spinner.id = 'appendSpinner';
+                list.appendChild(spinner);
+            }
+
+            try {
+                const res = await fetch(`${API}/api/news?query=${encodeURIComponent(query)}&display=5&sort=date&start=${currentStart}`);
+                const data = await res.json();
+                const items = data.items || [];
+
+                if (append) {
+                    const sp = document.getElementById('appendSpinner');
+                    if (sp) sp.remove();
+                }
+
+                if (!items.length && !append) {
+                    list.innerHTML = '<div class="empty-state">검색 결과가 없습니다.</div>';
+                    return;
+                }
+
+                currentItems = append ? [...currentItems, ...items] : items;
+                currentStart += items.length;
+
+                // 카드 렌더
+                const cardsHtml = currentItems.map((item, idx) => {
+                    const title = stripHtml(item.title);
+                    const desc = stripHtml(item.description);
+                    const pubDate = formatDate(item.pubDate);
+                    const link = item.link || item.originallink;
+                    return `
+                    <div class="news-card" data-idx="${idx}">
+                        <div class="news-card-source">${pubDate}</div>
+                        <div class="news-title">${title}</div>
+                        <div class="news-summary">${desc}</div>
+                        <a class="news-apply" href="#" data-idx="${idx}">📋 본문 바로 적용</a>
+                    </div>
+                `;
+                }).join('');
+
+                const moreBtn = data.total > currentStart
+                    ? `<button class="btn-load-more" id="loadMoreBtn">더보기 (총 ${Number(data.total).toLocaleString()}건)</button>`
+                    : '';
+
+                if (!append) {
+                    list.innerHTML = cardsHtml + moreBtn;
+                } else {
+                    // 기존 더보기 버튼 제거하고 새 카드 + 버튼 추가
+                    const oldMore = document.getElementById('loadMoreBtn');
+                    if (oldMore) oldMore.remove();
+                    list.insertAdjacentHTML('beforeend', cardsHtml.replace(currentItems.slice(0, currentStart - items.length).map((_, i) => `data-idx="${i}"`).join('|'), '') + moreBtn);
+                    // 좀 더 단순하게: 전체 재렌더
+                    list.innerHTML = cardsHtml + moreBtn;
+                }
+
+                // 카드 클릭 → 모달
+                list.querySelectorAll('.news-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('news-apply')) return; // 적용 버튼은 별도
+                        const idx = parseInt(card.dataset.idx);
+                        openModal(currentItems[idx]);
+                    });
+                });
+
+                // 적용 버튼 클릭
+                list.querySelectorAll('.news-apply').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const idx = parseInt(btn.dataset.idx);
+                        applyToEditor(currentItems[idx]);
+                    });
+                });
+
+                // 더보기 버튼
+                const loadMoreBtn = document.getElementById('loadMoreBtn');
+                if (loadMoreBtn) {
+                    loadMoreBtn.addEventListener('click', () => searchNews(currentQuery, true));
+                }
+
+            } catch (e) {
+                list.innerHTML = '<div class="empty-state">⚠️ 검색 실패<br><small>프록시 서버(5501)가 실행 중인지 확인하세요</small></div>';
+            }
+        }
+
+        // ════════════════════════════════════════════
+        //  모달
+        // ════════════════════════════════════════════
+        function openModal(item) {
+            const title = stripHtml(item.title);
+            const desc = stripHtml(item.description);
+            const date = formatDate(item.pubDate);
+            const link = item.link || item.originallink;
+
+            document.getElementById('modalBadge').textContent = '네이버 뉴스';
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMeta').textContent = date ? `📅 ${date}` : '';
+            document.getElementById('modalDesc').textContent = desc || '본문 내용이 없습니다.';
+            document.getElementById('modalLink').href = link;
+
+            document.getElementById('modalApply').onclick = () => {
+                applyToEditor(item);
+                closeModal();
+            };
+
+            document.getElementById('newsModal').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('newsModal').classList.remove('open');
+        }
+
+        document.getElementById('modalClose').addEventListener('click', closeModal);
+        document.getElementById('newsModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('newsModal')) closeModal();
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+        // ════════════════════════════════════════════
+        //  에디터 헬퍼
+        // ════════════════════════════════════════════
+        const articleEditor = document.getElementById('articleEditor');
+        const articleWatermark = document.getElementById('articleWatermark');
+        const articleCounter = document.getElementById('articleCounter');
+
+        function updateEditorUI() {
+            const len = (articleEditor.innerText || '').trim().length;
+            articleCounter.textContent = len > 0 ? len.toLocaleString() + '자' : '0자';
+            articleWatermark.classList.toggle('hidden', len > 0);
+        }
+
+        articleEditor.addEventListener('input', updateEditorUI);
+        document.getElementById('articleArea').addEventListener('click', () => articleEditor.focus());
+
+        // 붙여넣기 시 서식 제거
+        articleEditor.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const plain = (e.clipboardData || window.clipboardData).getData('text/plain');
+            document.execCommand('insertText', false, plain);
+        });
+
+        updateEditorUI();
+
+        // ════════════════════════════════════════════
+        //  에디터에 적용 (뉴스 기사 → 에디터)
+        // ════════════════════════════════════════════
+        function applyToEditor(item) {
+            const title = stripHtml(item.title);
+            const desc = stripHtml(item.description);
+            const date = formatDate(item.pubDate);
+            const link = item.link || item.originallink;
+            const text = '[' + title + ']\n\n' + desc + '\n\n출처: ' + link + '\n일자: ' + date;
+
+            articleEditor.innerText = text;
+            articleEditor.focus();
+            // 커서를 맨 끝으로 이동
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(articleEditor);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            updateEditorUI();
+        }
+
+        // ════════════════════════════════════════════
+        //  검색창 이벤트
+        // ════════════════════════════════════════════
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const q = document.getElementById('searchInput').value.trim();
+            if (q) searchNews(q);
+        });
+        document.getElementById('searchInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const q = e.target.value.trim();
+                if (q) searchNews(q);
+            }
+        });
+
+        // ════════════════════════════════════════════
+        //  초기 실행
+        // ════════════════════════════════════════════
+        loadTrending();
+
+    </script>
+
+    <!-- ════════════════════════════════════════════
+         로그인 모달
+    ════════════════════════════════════════════ -->
+    <div class="auth-overlay" id="loginOverlay">
+        <div class="auth-box">
+            <button class="modal-close" id="loginClose">×</button>
+
+            <!-- 로고 -->
+            <div class="auth-logo">
+                <div class="auth-logo-icon">
+                    <svg viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M20 12C20 12 15.5 4 10 4C5.58 4 2 7.58 2 12C2 16.42 5.58 20 10 20C15.5 20 20 12 20 12ZM20 12C20 12 24.5 20 30 20C34.42 20 38 16.42 38 12C38 7.58 34.42 4 30 4C24.5 4 20 12 20 12Z"
+                            stroke="white" stroke-width="3" fill="none" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <span class="auth-logo-text">TRANSFORM</span>
+            </div>
+
+            <h2 class="auth-title">다시 만나서 반가워요</h2>
+            <p class="auth-subtitle">계속하려면 로그인하세요</p>
+
+            <div class="auth-field">
+                <label class="auth-label">이메일 (아이디)</label>
+                <input class="auth-input" type="email" id="loginEmail" placeholder="example@email.com"
+                    autocomplete="email" />
+            </div>
+            <div class="auth-field">
+                <label class="auth-label">비밀번호</label>
+                <input class="auth-input" type="password" id="loginPassword" placeholder="비밀번호를 입력하세요"
+                    autocomplete="current-password" />
+            </div>
+
+            <button class="auth-btn" id="loginSubmit">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+                로그인
+            </button>
+
+            <div class="auth-msg" id="loginMsg"></div>
+
+            <div class="auth-divider"></div>
+            <div class="auth-switch">
+                아직 계정이 없으신가요? <a id="goSignup">회원가입</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════
+         회원가입 모달
+    ════════════════════════════════════════════ -->
+    <div class="auth-overlay" id="signupOverlay">
+        <div class="auth-box">
+            <button class="modal-close" id="signupClose">×</button>
+
+            <!-- 로고 -->
+            <div class="auth-logo">
+                <div class="auth-logo-icon">
+                    <svg viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M20 12C20 12 15.5 4 10 4C5.58 4 2 7.58 2 12C2 16.42 5.58 20 10 20C15.5 20 20 12 20 12ZM20 12C20 12 24.5 20 30 20C34.42 20 38 16.42 38 12C38 7.58 34.42 4 30 4C24.5 4 20 12 20 12Z"
+                            stroke="white" stroke-width="3" fill="none" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <span class="auth-logo-text">TRANSFORM</span>
+            </div>
+
+            <h2 class="auth-title">TRANSFORM 시작하기 🚀</h2>
+            <p class="auth-subtitle">3가지 정보만 입력하면 바로 시작할 수 있어요</p>
+
+            <div class="auth-field">
+                <label class="auth-label">사용자 이름</label>
+                <input class="auth-input" type="text" id="signupName" placeholder="홍길동" autocomplete="name" />
+            </div>
+            <div class="auth-field">
+                <label class="auth-label">이메일 (아이디)</label>
+                <input class="auth-input" type="email" id="signupEmail" placeholder="example@email.com"
+                    autocomplete="email" />
+            </div>
+            <div class="auth-field">
+                <label class="auth-label">비밀번호</label>
+                <input class="auth-input" type="password" id="signupPassword" placeholder="6자 이상 입력하세요"
+                    autocomplete="new-password" />
+            </div>
+
+            <button class="auth-btn" id="signupSubmit">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <line x1="19" y1="8" x2="19" y2="14" />
+                    <line x1="22" y1="11" x2="16" y2="11" />
+                </svg>
+                회원가입
+            </button>
+
+            <div class="auth-msg" id="signupMsg"></div>
+
+            <div class="auth-divider"></div>
+            <div class="auth-switch">
+                이미 계정이 있으신가요? <a id="goLogin">로그인</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════
+         Supabase 인증 스크립트
+    ════════════════════════════════════════════ -->
+    <script>
+        // ── Supabase 클라이언트 초기화 ─────────────────────────
+        const SUPABASE_URL = 'https://onpzllaanzfsekdojqla.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_W2qyoLuscV5adCxhuMPjjw_EwwfRKyl';
+        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ── 모달 요소 ──────────────────────────────────────────
+        const loginOverlay = document.getElementById('loginOverlay');
+        const signupOverlay = document.getElementById('signupOverlay');
+
+        function openLogin() { loginOverlay.classList.add('open'); clearMsg('login'); }
+        function closeLogin() { loginOverlay.classList.remove('open'); }
+        function openSignup() { signupOverlay.classList.add('open'); clearMsg('signup'); }
+        function closeSignup() { signupOverlay.classList.remove('open'); }
+
+        // 버튼 이벤트
+        document.getElementById('btnLogin').addEventListener('click', openLogin);
+        document.getElementById('btnSignup').addEventListener('click', openSignup);
+        document.getElementById('loginClose').addEventListener('click', closeLogin);
+        document.getElementById('signupClose').addEventListener('click', closeSignup);
+        document.getElementById('goSignup').addEventListener('click', () => { closeLogin(); openSignup(); });
+        document.getElementById('goLogin').addEventListener('click', () => { closeSignup(); openLogin(); });
+
+        // 배경 클릭 닫기
+        loginOverlay.addEventListener('click', e => { if (e.target === loginOverlay) closeLogin(); });
+        signupOverlay.addEventListener('click', e => { if (e.target === signupOverlay) closeSignup(); });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { closeLogin(); closeSignup(); }
+        });
+
+        // ── 메시지 표시 ────────────────────────────────────────
+        function showMsg(type, text, isError = false) {
+            const el = document.getElementById(`${type}Msg`);
+            el.textContent = text;
+            el.className = `auth-msg ${isError ? 'error' : 'success'}`;
+        }
+        function clearMsg(type) {
+            const el = document.getElementById(`${type}Msg`);
+            el.textContent = '';
+            el.className = 'auth-msg';
+        }
+
+        // ── 헤더 상태 업데이트 ─────────────────────────────────
+        function updateHeader(user) {
+            const authBtns = document.getElementById('authBtns');
+            const headerUser = document.getElementById('headerUser');
+            const headerAvatar = document.getElementById('headerAvatar');
+            const headerUsername = document.getElementById('headerUsername');
+
+            if (user) {
+                const username = user.user_metadata?.username || user.email?.split('@')[0] || '사용자';
+                authBtns.style.display = 'none';
+                headerUser.classList.add('visible');
+                headerAvatar.textContent = username.charAt(0).toUpperCase();
+                headerUsername.textContent = username + '님';
+            } else {
+                authBtns.style.display = '';
+                headerUser.classList.remove('visible');
+            }
+        }
+
+        // ── 로그인 ─────────────────────────────────────────────
+        document.getElementById('loginSubmit').addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginSubmit');
+
+            if (!email || !password) {
+                showMsg('login', '이메일과 비밀번호를 모두 입력해주세요.', true);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '로그인 중...';
+
+            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+
+            btn.disabled = false;
+            btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> 로그인`;
+
+            if (error) {
+                const msg = error.message.includes('Invalid') ? '이메일 또는 비밀번호가 올바르지 않습니다.' : error.message;
+                showMsg('login', msg, true);
+            } else {
+                showMsg('login', '로그인 성공! 🎉');
+                updateHeader(data.user);
+                setTimeout(closeLogin, 900);
+            }
+        });
+
+        // Enter 키 로그인
+        ['loginEmail', 'loginPassword'].forEach(id => {
+            document.getElementById(id).addEventListener('keydown', e => {
+                if (e.key === 'Enter') document.getElementById('loginSubmit').click();
+            });
+        });
+
+        // ── 회원가입 ───────────────────────────────────────────
+        document.getElementById('signupSubmit').addEventListener('click', async () => {
+            const username = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const btn = document.getElementById('signupSubmit');
+
+            if (!username || !email || !password) {
+                showMsg('signup', '모든 항목을 입력해주세요.', true);
+                return;
+            }
+            if (password.length < 6) {
+                showMsg('signup', '비밀번호는 6자 이상이어야 합니다.', true);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '가입 중...';
+
+            const { data, error } = await _supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: { username, display_name: username }
+                }
+            });
+
+            btn.disabled = false;
+            btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg> 회원가입`;
+
+            if (error) {
+                const msg = error.message.includes('already') ? '이미 사용 중인 이메일입니다.' : error.message;
+                showMsg('signup', msg, true);
+            } else {
+                // 이메일 확인이 비활성화된 경우 바로 로그인 처리
+                if (data.user && data.session) {
+                    showMsg('signup', `환영합니다, ${username}님! 🎉`);
+                    updateHeader(data.user);
+                    setTimeout(closeSignup, 1000);
+                } else {
+                    showMsg('signup', '가입 완료! 이메일 인증 후 로그인해주세요. 📧');
+                }
+            }
+        });
+
+        // Enter 키 회원가입
+        ['signupName', 'signupEmail', 'signupPassword'].forEach(id => {
+            document.getElementById(id).addEventListener('keydown', e => {
+                if (e.key === 'Enter') document.getElementById('signupSubmit').click();
+            });
+        });
+
+        // ── 로그아웃 ───────────────────────────────────────────
+        document.getElementById('btnLogout').addEventListener('click', async () => {
+            await _supabase.auth.signOut();
+            updateHeader(null);
+        });
+
+        // ── 세션 복원 (페이지 새로고침 유지) ──────────────────
+        _supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) updateHeader(session.user);
+        });
+
+        // 실시간 로그인 상태 변화 감지
+        _supabase.auth.onAuthStateChange((_event, session) => {
+            updateHeader(session?.user || null);
+        });
+    </script>
+
+    <!-- ════════════════════════════════════════════
+         토스트 컨테이너
+    ════════════════════════════════════════════ -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ════════════════════════════════════════════
+         저장된 기사 패널
+    ════════════════════════════════════════════ -->
+    <div class="saved-panel" id="savedPanel">
+        <div class="saved-panel-header">
+            <div class="saved-panel-title">
+                💾 저장된 기사
+                <span id="savedCount"
+                    style="font-size:11px;font-weight:500;color:var(--text-muted);background:var(--border);border-radius:20px;padding:2px 8px;">0</span>
+            </div>
+            <button class="saved-panel-close" id="savedPanelClose">×</button>
+        </div>
+        <div class="saved-list" id="savedList">
+            <div class="saved-empty">저장된 기사가 없습니다</div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════
+         기사 재가공 모달
+    ════════════════════════════════════════════ -->
+    <div class="reprocess-overlay" id="reprocessOverlay">
+        <div class="reprocess-box">
+            <h3 class="reprocess-title">✏️ 기사 재가공</h3>
+            <p class="reprocess-subtitle">재가공 방식을 선택하세요</p>
+            <div class="reprocess-options">
+                <button class="reprocess-opt selected" data-mode="summary">
+                    <div class="reprocess-opt-icon">📝</div>
+                    <div class="reprocess-opt-label">요약하기</div>
+                    <div class="reprocess-opt-desc">핵심만 3줄로</div>
+                </button>
+                <button class="reprocess-opt" data-mode="bullets">
+                    <div class="reprocess-opt-icon">🔹</div>
+                    <div class="reprocess-opt-label">불릿 포인트</div>
+                    <div class="reprocess-opt-desc">주요 내용 목록화</div>
+                </button>
+                <button class="reprocess-opt" data-mode="sns">
+                    <div class="reprocess-opt-icon">📱</div>
+                    <div class="reprocess-opt-label">SNS 스타일</div>
+                    <div class="reprocess-opt-desc">짧고 임팩트 있게</div>
+                </button>
+                <button class="reprocess-opt" data-mode="formal">
+                    <div class="reprocess-opt-icon">📰</div>
+                    <div class="reprocess-opt-label">공식 보도문</div>
+                    <div class="reprocess-opt-desc">격식체로 재작성</div>
+                </button>
+            </div>
+            <div class="reprocess-actions">
+                <button class="reprocess-cancel" id="reprocessCancel">취소</button>
+                <button class="reprocess-apply" id="reprocessApply">적용하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════
+         기능 스크립트 (저장 / 초기화 / 재가공)
+    ════════════════════════════════════════════ -->
+    <script>
+        // ════════════════════════════════════════════
+        //  토스트 알림
+        // ════════════════════════════════════════════
+        function showToast(msg, type = 'info', duration = 2800) {
+            const container = document.getElementById('toastContainer');
+            const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.textContent = (icons[type] || '') + ' ' + msg;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'toastOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // ════════════════════════════════════════════
+        //  localStorage 저장 관리
+        // ════════════════════════════════════════════
+        const STORAGE_KEY = 'transform_saved_articles';
+
+        function getSaved() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+            catch { return []; }
+        }
+
+        function setSaved(arr) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+        }
+
+        function renderSavedList() {
+            const list = document.getElementById('savedList');
+            const count = document.getElementById('savedCount');
+            const items = getSaved();
+            count.textContent = items.length;
+
+            if (items.length === 0) {
+                list.innerHTML = '<div class="saved-empty">💾 저장된 기사가 없습니다</div>';
+                return;
+            }
+
+            list.innerHTML = items.map((item, i) => `
+            <div class="saved-item" data-idx="${i}">
+                <div class="saved-item-content">
+                    <div class="saved-item-preview">${item.preview}</div>
+                    <div class="saved-item-meta">📅 ${item.date} · ${item.length.toLocaleString()}자</div>
+                </div>
+                <button class="saved-item-del" data-idx="${i}" title="삭제">🗑</button>
+            </div>
+        `).join('');
+
+            // 클릭 → 에디터에 불러오기
+            list.querySelectorAll('.saved-item').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    if (e.target.closest('.saved-item-del')) return;
+                    const idx = parseInt(el.dataset.idx);
+                    const item = getSaved()[idx];
+                    if (!item) return;
+                    articleEditor.innerText = item.content;
+                    updateEditorUI();
+                    closeSavedPanel();
+                    showToast('기사를 불러왔습니다', 'success');
+                });
+            });
+
+            // 삭제 버튼
+            list.querySelectorAll('.saved-item-del').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(btn.dataset.idx);
+                    const items = getSaved();
+                    items.splice(idx, 1);
+                    setSaved(items);
+                    renderSavedList();
+                    showToast('삭제되었습니다', 'info');
+                });
+            });
+        }
+
+        // ════════════════════════════════════════════
+        //  저장 패널 열기 / 닫기
+        // ════════════════════════════════════════════
+        function openSavedPanel() {
+            renderSavedList();
+            document.getElementById('savedPanel').classList.add('open');
+        }
+        function closeSavedPanel() {
+            document.getElementById('savedPanel').classList.remove('open');
+        }
+
+        document.getElementById('savedPanelClose').addEventListener('click', closeSavedPanel);
+
+        // ════════════════════════════════════════════
+        //  기사 저장 버튼
+        // ════════════════════════════════════════════
+        document.getElementById('btnSave').addEventListener('click', async () => {
+            const content = (articleEditor.innerText || '').trim();
+            if (!content) {
+                showToast('저장할 내용이 없습니다', 'warning');
+                return;
+            }
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+            const preview = content.replace(/\n/g, ' ').slice(0, 60) + (content.length > 60 ? '…' : '');
+
+            // ── Supabase에 저장 (로그인 상태) ──
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (session?.user) {
+                try {
+                    const { error } = await _supabase
+                        .from('saved_articles')
+                        .insert({
+                            user_id: session.user.id,
+                            content: content,
+                            preview: preview,
+                            created_at: now.toISOString()
+                        });
+                    if (error) throw error;
+                    showToast('Supabase에 저장되었습니다 ☁️', 'success');
+                } catch (err) {
+                    // Supabase 저장 실패 시 로컬로 폴백
+                    console.warn('Supabase 저장 실패, 로컬에 저장합니다:', err.message);
+                    saveToLocal(content, preview, dateStr);
+                }
+            } else {
+                // 비로그인 → 로컬에 저장
+                saveToLocal(content, preview, dateStr);
+            }
+        });
+
+        function saveToLocal(content, preview, dateStr) {
+            const items = getSaved();
+            items.unshift({ content, preview, date: dateStr, length: content.length });
+            if (items.length > 30) items.pop(); // 최대 30개
+            setSaved(items);
+            showToast('로컬에 저장되었습니다 💾', 'success');
+            openSavedPanel();
+        }
+
+        // ════════════════════════════════════════════
+        //  초기화 버튼
+        // ════════════════════════════════════════════
+        document.getElementById('btnReset').addEventListener('click', () => {
+            if ((articleEditor.innerText || '').trim().length === 0) return;
+            if (!confirm('에디터 내용을 모두 지울까요?')) return;
+            articleEditor.innerText = '';
+            updateEditorUI();
+            showToast('초기화되었습니다', 'info');
+        });
+
+        // ════════════════════════════════════════════
+        //  기사 재가공 모달
+        // ════════════════════════════════════════════
+        let selectedMode = 'summary';
+
+        document.getElementById('btnReprocess').addEventListener('click', () => {
+            const content = (articleEditor.innerText || '').trim();
+            if (!content) {
+                showToast('재가공할 내용을 먼저 입력하세요', 'warning');
+                return;
+            }
+            showToast('텍스트 재가공 옵션을 선택하세요', 'info', 1500);
+            document.getElementById('reprocessOverlay').classList.add('open');
+        });
+
+        document.getElementById('reprocessCancel').addEventListener('click', () => {
+            document.getElementById('reprocessOverlay').classList.remove('open');
+        });
+
+        document.getElementById('reprocessOverlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('reprocessOverlay'))
+                document.getElementById('reprocessOverlay').classList.remove('open');
+        });
+
+        // 옵션 선택
+        document.querySelectorAll('.reprocess-opt').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.reprocess-opt').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedMode = btn.dataset.mode;
+            });
+        });
+
+        // 재가공 적용
+        document.getElementById('reprocessApply').addEventListener('click', () => {
+            const content = (articleEditor.innerText || '').trim();
+            if (!content) return;
+
+            let result = '';
+            const lines = content.split('\n').filter(l => l.trim());
+
+            if (selectedMode === 'summary') {
+                result = '📝 요약\n\n';
+                const sentences = content.replace(/\n/g, ' ').split(/[.!?。]/).filter(s => s.trim().length > 10);
+                result += sentences.slice(0, 3).map((s, i) => `${i + 1}. ${s.trim()}.`).join('\n');
+
+            } else if (selectedMode === 'bullets') {
+                result = '🔹 주요 내용\n\n';
+                const sentences = content.replace(/\n/g, ' ').split(/[.!?。]/).filter(s => s.trim().length > 10);
+                result += sentences.slice(0, 6).map(s => `• ${s.trim()}.`).join('\n');
+
+            } else if (selectedMode === 'sns') {
+                const first = content.replace(/\n/g, ' ').slice(0, 100);
+                result = '📱 SNS 포스트\n\n';
+                result += first + (content.length > 100 ? '...' : '') + '\n\n';
+                result += '#TRANSFORM #뉴스 #이슈';
+
+            } else if (selectedMode === 'formal') {
+                result = '📰 보도자료\n\n';
+                result += content
+                    .replace(/\.(\s|$)/g, '.\n')
+                    .replace(/\b(했다|한다|됐다|된다)\b/g, (m) => m.replace('다', '습니다'))
+                    .trim();
+            }
+
+            if (result) {
+                articleEditor.innerText = result;
+                updateEditorUI();
+                document.getElementById('reprocessOverlay').classList.remove('open');
+                showToast('재가공 완료!', 'success');
+            }
+        });
+
+
+
+        // ════════════════════════════════════════════
+        //  콘텐츠 제작하기 버튼 (시뮬레이션)
+        // ════════════════════════════════════════════
+        document.getElementById('btnCreate').addEventListener('click', () => {
+            const content = (document.getElementById('articleEditor').innerText || '').trim();
+            const activeType = document.querySelector('.type-btn.active');
+            const activeStyle = document.querySelector('.style-btn.active');
+            const activeRatio = document.querySelector('.ratio-btn.active');
+
+            if (!content) {
+                showToast('먼저 기사 내용을 입력해주세요', 'warning');
+                return;
+            }
+
+            const type = activeType?.textContent.trim() || '카드뉴스';
+            const style = activeStyle?.textContent.trim() || 'REAL';
+            const ratio = activeRatio?.textContent.trim() || '1:1';
+
+            if (!confirm(`'${type}' 스타일로 이미지 콘텐츠를 제작하시겠습니까?`)) return;
+
+            // 로딩 시작
+            const loading = document.getElementById('creationLoading');
+            loading.classList.add('open');
+
+            // 2.5초 후 완료 처리
+            setTimeout(() => {
+                document.getElementById('resultBadge').textContent = `${type} · ${style} · ${ratio}`;
+                document.getElementById('resultOverlay').classList.add('open');
+                showToast('콘텐츠 제작 완료! ✨', 'success');
+                loading.classList.remove('open');
+            }, 2500);
+        });
+
+        // 결과 창 닫기
+        document.getElementById('btnCloseResult').addEventListener('click', () => {
+            document.getElementById('resultOverlay').classList.remove('open');
+        });
+        document.getElementById('resultOverlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('resultOverlay'))
+                document.getElementById('resultOverlay').classList.remove('open');
+        });
+
+        // 다운로드 (더미)
+        document.getElementById('btnDownload').addEventListener('click', () => {
+            showToast('이미지를 다운로드합니다...', 'success');
+            // 실제 다운로드 로직은 canvas나 서버 응답 blob 필요
+        });
+
+        // 공유 (더미)
+        document.getElementById('btnShare').addEventListener('click', () => {
+            // 클립보드 복사 시늉
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showToast('링크가 복사되었습니다! 🔗', 'info');
+            });
+        });
+
+        // ════════════════════════════════════════════
+        //  변환 유형 / 스타일 / 비율 버튼 토글
+        // ════════════════════════════════════════════
+        document.querySelectorAll('.type-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+        document.querySelectorAll('.style-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+        document.querySelectorAll('.ratio-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    </script>
+
+</body>
+
+</html>

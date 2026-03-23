@@ -27,20 +27,20 @@ except ImportError:
 
 app = Flask(__name__, static_folder='.')
 
-NAVER_CLIENT_ID     = '173Fw2_Gev1RH9i9Fr8B'
-NAVER_CLIENT_SECRET = 'tU3KhkU9aj'
+NAVER_CLIENT_ID     = 'YOUR_NAVER_CLIENT_ID_HERE'
+NAVER_CLIENT_SECRET = 'YOUR_NAVER_CLIENT_SECRET_HERE'
 NAVER_HEADERS = {
     'X-Naver-Client-Id':     NAVER_CLIENT_ID,
     'X-Naver-Client-Secret': NAVER_CLIENT_SECRET,
 }
 
-GOOGLE_API_KEY = 'AIzaSyA-R0hSxPTF_C8gtTKBjePIOK74cg5SPwQ'
-# 통합 멀티모달 모델 설정 (현재 활성화된 모델: gemini-2.0-flash)
-AI_MODEL = 'gemini-2.0-flash'
+GOOGLE_API_KEY = 'YOUR_GOOGLE_GEMINI_API_KEY_HERE'
+# 통합 멀티모달 모델 설정 (현재 활성화된 모델: gemini-2.5-flash)
+AI_MODEL = 'gemini-2.5-flash'
 BASE_URL = f'https://generativelanguage.googleapis.com/v1beta/models/{AI_MODEL}:generateContent?key={GOOGLE_API_KEY}'
 
-# 폴백용 모델 설정 (실제 목록에 존재하는 imagen-4.0 사용)
-FALLBACK_IMAGE_MODEL = 'imagen-4.0-generate-001'
+# 폴백용 모델 설정 (실제 목록에 존재하는 imagen-3.0 사용)
+FALLBACK_IMAGE_MODEL = 'imagen-3.0-generate-001'
 FALLBACK_IMAGE_URL = f'https://generativelanguage.googleapis.com/v1beta/models/{FALLBACK_IMAGE_MODEL}:predict?key={GOOGLE_API_KEY}'
 
 # TTS 모델 설정
@@ -72,7 +72,13 @@ def get_trending():
     # 항상 정확히 5개 반환 보장
     try:
         import json as _json
-        query = "속보"
+        
+        # 클라이언트에서 전달한 카테고리 파라미터 받기 (기본값: '속보')
+        category = request.args.get('category', '속보')
+        
+        # 카테고리에 맞는 검색어 설정
+        query = category if category != '속보' else '속보'
+        
         # 중복 제거를 위해 넉넉히 20개를 가져온 후 필터링
         url = f"https://openapi.naver.com/v1/search/news.json?query={query}&display=20&sort=sim"
         resp = requests.get(url, headers=NAVER_HEADERS, timeout=10)
@@ -101,10 +107,10 @@ def get_trending():
                     break
 
             if unique_titles:
-                # Gemini에 보낼 제목은 최대 10개 (5개 보장을 위해 여유 있게)
-                titles_for_gemini = unique_titles[:10]
+                # Gemini에 보낼 제목은 5개 (속도 향상을 위해 수량 조정)
+                titles_for_gemini = unique_titles[:5]
                 prompt = (
-                    "다음 뉴스 제목들을 읽고, 각 제목의 핵심 내용을 2~5단어의 짧은 한국어 문구로 요약해줘.\n"
+                    f"다음 뉴스 제목들은 '{category}' 분야의 뉴스입니다. 각 제목의 핵심 내용을 2~5단어의 짧은 한국어 문구로 요약해줘.\n"
                     "규칙:\n"
                     f"1. 정확히 {len(titles_for_gemini)}개의 요약을 반환 (입력 제목 수와 동일)\n"
                     "2. 각 요약은 반드시 12자 이내로 아주 짧게\n"
@@ -113,12 +119,12 @@ def get_trending():
                     "5. 결과는 오직 JSON 문자열 배열 형식으로만: [\"요약1\", \"요약2\", ...]\n\n"
                     f"뉴스 제목들:\n{_json.dumps(titles_for_gemini, ensure_ascii=False)}"
                 )
-                gemini_url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GOOGLE_API_KEY}'
+                gemini_url = f'https://generativelanguage.googleapis.com/v1beta/models/{AI_MODEL}:generateContent?key={GOOGLE_API_KEY}'
                 payload = {
                     "contents": [{"parts": [{"text": prompt}]}],
                     "generationConfig": {"responseMimeType": "application/json"}
                 }
-                g_resp = requests.post(gemini_url, json=payload, timeout=15)
+                g_resp = requests.post(gemini_url, json=payload, timeout=30)
                 if g_resp.status_code == 200:
                     try:
                         output = g_resp.json()['candidates'][0]['content']['parts'][0]['text']
@@ -202,11 +208,16 @@ def call_imagen_proxy():
     aspect_ratio = data.get('aspectRatio', '1:1')
 
     # 1. 이미지 생성 특화 멀티모달 모델 시도
-    GEN_MODEL = 'gemini-2.0-flash-exp-image-generation'
+    GEN_MODEL = 'gemini-2.5-flash-image'
     url = f'https://generativelanguage.googleapis.com/v1beta/models/{GEN_MODEL}:generateContent?key={GOOGLE_API_KEY}'
     
+    RATIO_MAP = {'4:5': '3:4', '1:1': '1:1', '9:16': '9:16', '16:9': '16:9', '4:3': '4:3', '3:4': '3:4'}
+    safe_ratio = RATIO_MAP.get(aspect_ratio, '1:1')
+    
+    prompt_with_ratio = f"Generate an image with aspect ratio {safe_ratio}. {prompt}"
+    
     payload = {
-        "contents": [{"parts": [{"text": f"Generate a high-quality visual illustration for: {prompt}"}]}],
+        "contents": [{"parts": [{"text": f"Generate a high-quality visual illustration with absolutely NO TEXT, NO LETTERS, NO WORDS, NO WRITING, NO CAPTIONS, NO KOREAN TEXT, NO SUBTITLES in the image. Pure visual only: {prompt_with_ratio}"}]}],
         "generationConfig": {
             "maxOutputTokens": 2048,
             "temperature": 1.0
@@ -230,10 +241,7 @@ def call_imagen_proxy():
 
         print(f"[DEBUG] 메인 모델 실패 ({resp.status_code}), {FALLBACK_IMAGE_MODEL}로 폴백...")
         
-        # 2. Imagen 4.0 (:predict 방식) - aspectRatio 지원 범위로 변환 후 호출
-        # 지원값: 1:1, 9:16, 16:9, 4:3, 3:4  →  4:5는 지원 안 됨 → 3:4로 대체
-        RATIO_MAP = {'4:5': '3:4', '1:1': '1:1', '9:16': '9:16', '16:9': '16:9', '4:3': '4:3', '3:4': '3:4'}
-        safe_ratio = RATIO_MAP.get(aspect_ratio, '1:1')
+        # 2. Imagen 3.0 (:predict 방식) - aspectRatio 지원 범위로 변환 후 호출
         instances_payload = {
             "instances": [{"prompt": prompt}],
             "parameters": {"sampleCount": 1, "aspectRatio": safe_ratio}
@@ -428,7 +436,7 @@ def get_audio_duration(filepath):
     return 5.0
 
 
-def generate_image_for_sentence(sentence, style_name='실사'):
+def generate_image_for_sentence(sentence, style_name='실사', article_context=''):
     """문장에 맞는 9:16 이미지 생성 (bytes 반환) - 다단계 폴백"""
     style_map = {
         '실사': 'Photorealistic', '카툰': 'Cartoon style',
@@ -438,11 +446,14 @@ def generate_image_for_sentence(sentence, style_name='실사'):
     
     # Gemini로 영문 시각 묘사 생성
     prompt_gen = f"""Create a concise English image description for this Korean news sentence.
+Use the Article Context to ensure the image accurately reflects the main subject (e.g., specific company, technology, or event).
+Focus on representing the overall situation, concept, or background of the news rather than specific people.
 Output ONLY the English visual description (max 50 words), no labels.
-Include Korean people with East Asian appearance if people are involved.
+Never output any Korean characters or words.
+Article Context: {article_context[:800]}
 Sentence: {sentence}"""
     
-    gemini_url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GOOGLE_API_KEY}'
+    gemini_url = f'https://generativelanguage.googleapis.com/v1beta/models/{AI_MODEL}:generateContent?key={GOOGLE_API_KEY}'
     visual_desc = "Professional news illustration"
     try:
         resp = requests.post(gemini_url, json={
@@ -451,21 +462,22 @@ Sentence: {sentence}"""
         }, timeout=15)
         if resp.status_code == 200:
             raw = resp.json()['candidates'][0]['content']['parts'][0]['text'].strip()
-            visual_desc = re.sub(r'[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]', '', raw).strip() or visual_desc
+            # 한국어 문자 완전 제거(유니코드 범위 적용)
+            cleaned = re.sub(r'[\uAC00-\uD7A3\u3131-\u314E\u314F-\u3163]+', '', raw).strip()
+            visual_desc = cleaned or visual_desc
     except:
         pass
     
-    final_prompt = f"{style_eng} style, {visual_desc}, vertical portrait, Korean characters, professional high resolution, cinematic"
+    final_prompt = f"{style_eng} style, {visual_desc}, vertical 9:16 background, wide angle shot, professional high resolution, cinematic, NO TEXT IN IMAGE, NO LETTERS, NO WORDS, NO WRITING, NO CAPTIONS, NO KOREAN TEXT, NO SUBTITLES, NO HANGUL, NO CHARACTERS OVERLAY, PURE VISUAL ONLY"
     print(f"    이미지 프롬프트: {final_prompt[:100]}...")
     
     # ── 1차: Gemini 이미지 생성 모델 (responseModalities 포함) ──
-    GEN_MODEL = 'gemini-2.0-flash-exp-image-generation'
+    GEN_MODEL = 'gemini-2.5-flash-image'
     url = f'https://generativelanguage.googleapis.com/v1beta/models/{GEN_MODEL}:generateContent?key={GOOGLE_API_KEY}'
     try:
         resp = requests.post(url, json={
-            "contents": [{"parts": [{"text": f"Generate a high-quality visual illustration: {final_prompt}"}]}],
+            "contents": [{"parts": [{"text": f"Generate a high-quality visual illustration with absolutely NO TEXT, NO LETTERS, NO WORDS, NO WRITING, NO CAPTIONS, NO KOREAN TEXT, NO SUBTITLES, NO HANGUL in the image. Pure visual scene only: {final_prompt}"}]}],
             "generationConfig": {
-                "responseModalities": ["TEXT", "IMAGE"],
                 "maxOutputTokens": 2048,
                 "temperature": 1.0
             }
@@ -588,7 +600,7 @@ def generate_shortform():
 기사:
 {article_text[:2000]}"""
         
-        gemini_url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GOOGLE_API_KEY}'
+        gemini_url = f'https://generativelanguage.googleapis.com/v1beta/models/{AI_MODEL}:generateContent?key={GOOGLE_API_KEY}'
         resp = requests.post(gemini_url, json={
             "contents": [{"parts": [{"text": script_prompt}]}],
             "generationConfig": {"responseMimeType": "application/json"}
@@ -635,13 +647,31 @@ def generate_shortform():
         image_files = []
         for i, sentence in enumerate(sentences):
             print(f"  - 문장 {i+1}/{len(sentences)} 이미지 생성...")
-            img_bytes = generate_image_for_sentence(sentence, style_name)
+            img_bytes = generate_image_for_sentence(sentence, style_name, article_context=article_text)
             if img_bytes:
                 img_path = os.path.join(job_dir, f'news_{i+1:02d}.png')
-                with open(img_path, 'wb') as f:
-                    f.write(img_bytes)
+                # ── Pillow로 정확히 1080x1920(9:16) 강제 변환 ──
+                try:
+                    from PIL import Image
+                    import io
+                    pil_img = Image.open(io.BytesIO(img_bytes)).convert('RGB')
+                    orig_w, orig_h = pil_img.size
+                    target_w, target_h = 1080, 1920
+                    # 짧은 쪽이 타겟에 맞도록 스케일 후 중앙 크롭
+                    scale = max(target_w / orig_w, target_h / orig_h)
+                    new_w = int(orig_w * scale)
+                    new_h = int(orig_h * scale)
+                    pil_img = pil_img.resize((new_w, new_h), Image.LANCZOS)
+                    left = (new_w - target_w) // 2
+                    top  = (new_h - target_h) // 2
+                    pil_img = pil_img.crop((left, top, left + target_w, top + target_h))
+                    pil_img.save(img_path, 'PNG')
+                    print(f"    ✓ 이미지 저장 (1080x1920 변환 완료): {orig_w}x{orig_h} → 1080x1920")
+                except Exception as pil_err:
+                    print(f"    [WARN] Pillow 변환 실패({pil_err}), 원본 저장")
+                    with open(img_path, 'wb') as f:
+                        f.write(img_bytes)
                 image_files.append(img_path)
-                print(f"    ✓ 이미지 저장: {len(img_bytes)} bytes")
             else:
                 print(f"    ✗ 이미지 생성 실패")
         
@@ -696,7 +726,7 @@ def generate_shortform():
             FFMPEG_PATH, '-y',
             '-f', 'concat', '-safe', '0', '-i', concat_file,
             '-i', combined_audio,
-            '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black',
+            '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920',
             '-c:v', 'libx264', '-preset', 'fast', '-pix_fmt', 'yuv420p',
             '-r', '30',
             '-c:a', 'aac', '-b:a', '192k',
@@ -762,4 +792,4 @@ if __name__ == '__main__':
     print('   http://localhost:5501/api/shortform/generate')
     print('   http://localhost:5501/api/create-card-image')
     print('★'*50 + '\n')
-    app.run(port=5501, debug=False)
+    app.run(host='0.0.0.0', port=5501, debug=False)
